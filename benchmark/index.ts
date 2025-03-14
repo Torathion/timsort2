@@ -1,5 +1,7 @@
-import ArrayGenerator from '../test/ArrayGenerator' // Ensure the path is correct
-import timsort from '../src' // Ensure the path is correct (or mock it if unavailable)
+import Table from 'cli-table3'
+import ArrayGenerator from '../test/ArrayGenerator'
+import timsort from '../src'
+import Timsort from 'timsort'
 
 // Define the comparison function for sorting
 const numberCompare = (a: number, b: number): number => a - b
@@ -10,47 +12,30 @@ const lengths: number[] = [10, 100, 1000, 10000]
 // Calculate repetitions based on array length
 const repetitionsFromLength = (n: number): number => Math.floor(12000000 / (n * (Math.log(n) / Math.LN10)))
 
-// PrettyPrinter class for formatting output
-class PrettyPrinter {
-  private str: string
-
-  constructor() {
-    this.str = ''
-  }
-
-  public addAt(value: string | number, at: number): void {
-    while (at > this.str.length) {
-      this.str += ' '
-    }
-    this.str += value.toString()
-  }
-
-  public toString(): string {
-    return this.str
-  }
+interface Times {
+  defaultTime: number
+  timsortTime: number
+  oldTimsortTime: number
+  method?: string
+  speedUpDefault?: string
+  speedUpRevival?: string
 }
 
 // BenchmarkRunner class to handle the benchmarking logic
 class BenchmarkRunner {
-  private defaultResults: Record<string, Record<number, number>>
-  private timsortResults: Record<string, Record<number, number>>
+  private table: InstanceType<typeof Table>
 
   constructor() {
-    this.defaultResults = {}
-    this.timsortResults = {}
+    // Initialize the cli-table3 table with column definitions
+    this.table = new Table({
+      head: ['ArrayType', 'Length', 'Time default', 'Time old', 'Time new', 'Speedup default', 'Speedup old'],
+      colWidths: [30, 20, 10, 15, 20], // Adjusted widths for clarity
+      style: { head: ['cyan'] }
+    })
   }
 
   // Run the benchmark for all array generators and lengths
   public runBenchmark(): void {
-    // Print header
-    const headerPrinter = new PrettyPrinter()
-    headerPrinter.addAt('ArrayType', 0)
-    headerPrinter.addAt('Length', 30)
-    headerPrinter.addAt('TimSort', 37)
-    headerPrinter.addAt('array.sort', 47)
-    headerPrinter.addAt('Speedup', 59)
-    console.log(headerPrinter.toString())
-
     // Explicitly list the generator methods we expect
     const generatorMethods: { name: string; fn: (n: number) => number[] }[] = [
       { name: 'randomInt', fn: ArrayGenerator.randomInt },
@@ -63,36 +48,53 @@ class BenchmarkRunner {
       { name: 'someDuplicateInt', fn: ArrayGenerator.someDuplicateInt }
     ]
 
+    if (generatorMethods.length === 0) {
+      console.log('No generator methods available to process.')
+      return
+    }
+
     for (const { name: generatorName, fn: generator } of generatorMethods) {
-      this.defaultResults[generatorName] = {}
-      this.timsortResults[generatorName] = {}
-
       for (const length of lengths) {
-        const { defaultTime, timsortTime } = this.benchmarkGenerator(generator, length)
-        this.defaultResults[generatorName][length] = defaultTime
-        this.timsortResults[generatorName][length] = timsortTime
+        console.log(`Benchmarking ${generatorName} with length ${length}`)
 
-        // Print results for this run
-        const printer = new PrettyPrinter()
-        printer.addAt(generatorName, 0)
-        printer.addAt(length, 30)
-        printer.addAt(Math.floor(timsortTime), 37)
-        printer.addAt(Math.floor(defaultTime), 47)
-        const speedup = timsortTime !== 0 ? (defaultTime / timsortTime).toFixed(2) : 'N/A'
-        printer.addAt(speedup, 59)
-        console.log(printer.toString())
+        try {
+          const { defaultTime, timsortTime, oldTimsortTime } = this.benchmarkGenerator(generator, length)
+          this.table.push([
+            generatorName,
+            length.toString(),
+            Math.floor(defaultTime).toString(),
+            Math.floor(oldTimsortTime).toString(),
+            Math.floor(timsortTime).toString(),
+            timsortTime !== 0 ? (defaultTime / timsortTime).toFixed(2) : 'N/A',
+            timsortTime !== 0 ? (oldTimsortTime / timsortTime).toFixed(2) : 'N/A'
+          ])
+        } catch (err) {
+          console.error(`Error benchmarking ${generatorName} with length ${length}:`, err)
+        }
       }
     }
+
+    // Print the entire table at the end
+    console.log(this.table.toString())
   }
 
   // Benchmark a single generator for a specific length
-  private benchmarkGenerator(generator: (n: number) => number[], length: number): { defaultTime: number; timsortTime: number } {
+  private benchmarkGenerator(generator: (n: number) => number[], length: number): Times {
     let defaultTime = 0
     let timsortTime = 0
+    let oldTimsortTime = 0
     const repetitions = repetitionsFromLength(length)
+
+    console.log(`Running ${repetitions} repetitions for length ${length}`)
+
     for (let i = 0; i < repetitions; i++) {
       const arr1 = generator(length)
       const arr2 = arr1.slice()
+      const arr3 = arr1.slice()
+
+      if (!Array.isArray(arr1) || !Array.isArray(arr2) || !Array.isArray(arr3)) {
+        throw new Error(`Generator returned invalid array for length ${length}`)
+      }
 
       // Benchmark array.sort
       const startDefault = process.hrtime()
@@ -111,11 +113,21 @@ class BenchmarkRunner {
       const startTimsortNano = startTimsort[0] * 1_000_000_000 + startTimsort[1]
       const stopTimsortNano = stopTimsort[0] * 1_000_000_000 + stopTimsort[1]
       timsortTime += stopTimsortNano - startTimsortNano
+
+      // Benchmark Revival (Old TimSort)
+      const startOldTimsort = process.hrtime()
+      Timsort(arr3, numberCompare)
+      const stopOldTimsort = process.hrtime()
+
+      const startOldTimsortNano = startOldTimsort[0] * 1_000_000_000 + startOldTimsort[1]
+      const stopOldTimsortNano = stopOldTimsort[0] * 1_000_000_000 + stopOldTimsort[1]
+      oldTimsortTime += stopOldTimsortNano - startOldTimsortNano
     }
 
     return {
       defaultTime: defaultTime / repetitions,
-      timsortTime: timsortTime / repetitions
+      timsortTime: timsortTime / repetitions,
+      oldTimsortTime: oldTimsortTime / repetitions
     }
   }
 
@@ -126,6 +138,10 @@ class BenchmarkRunner {
 
   public getTimsortResults(): Record<string, Record<number, number>> {
     return this.timsortResults
+  }
+
+  public getOldTimsortResults(): Record<string, Record<number, number>> {
+    return this.oldTimsortResults
   }
 }
 
