@@ -27,30 +27,13 @@ type Comparator<T> = (a: T, b: T) => number
 class TimSort<T> {
   array: AnyArray<T>
   compare: Comparator<T>
-  length
   minGallop = DEFAULT_MIN_GALLOPING
-  runLength: Array<number>
-  runStart: Array<number>
-  stackLength
-  tmpStorageLength = DEFAULT_TMP_STORAGE_LENGTH
   tmp: Array<T>
 
-  constructor(array: AnyArray<T>, compare: Comparator<T>) {
+  constructor(array: AnyArray<T>, len: number, compare: Comparator<T>) {
     this.array = array
     this.compare = compare
-
-    const len = (this.length = array.length)
-
-    if (len < 2 * DEFAULT_TMP_STORAGE_LENGTH) {
-      this.tmpStorageLength = len >>> 1
-    }
-
-    this.tmp = new Array(this.tmpStorageLength)
-
-    this.stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
-
-    this.runStart = new Array(this.stackLength)
-    this.runLength = new Array(this.stackLength)
+    this.tmp = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >>> 1 : DEFAULT_TMP_STORAGE_LENGTH)
   }
 
   /**
@@ -59,18 +42,16 @@ class TimSort<T> {
    *
    * @param {number} i - Index of the run to merge in TimSort's stack.
    */
-  mergeAt(i: number, stackSize: number) {
+  mergeAt(i: number, stackSize: number, runLength: number[], runStart: number[]) {
     const compare = this.compare
     const array = this.array
-    const runLength = this.runLength
-    const runStart = this.runStart
 
     let start1 = runStart[i]
     let length1 = runLength[i]
     const start2 = runStart[i + 1]
     let length2 = runLength[i + 1]
 
-    this.runLength[i] = length1 + length2
+    runLength[i] = length1 + length2
 
     if (i === stackSize - 3) {
       runStart[i + 1] = runStart[i + 2]
@@ -87,9 +68,7 @@ class TimSort<T> {
     start1 += k
     length1 -= k
 
-    if (length1 === 0) {
-      return
-    }
+    if (length1 === 0) return
 
     /*
      * Find where the last element in the first run goes in run2. Next elements
@@ -97,9 +76,7 @@ class TimSort<T> {
      */
     length2 = gallopLeft(array[start1 + length1 - 1] as T, array, start2, length2, length2 - 1, compare)
 
-    if (length2 === 0) {
-      return
-    }
+    if (length2 === 0) return
 
     /*
      * Merge remaining runs. A tmp array with length = min(length1, length2) is
@@ -488,11 +465,14 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
     return array
   }
 
-  const ts = new TimSort(array, compare!)
-  let stackSize = 0
+  const len = array.length
+  const ts = new TimSort(array, len, compare!)
 
+  let stackSize = 0
+  const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
+  const runStart = new Array(stackLength)
+  const runLenArr = new Array(stackLength)
   const minRun = minRunLength(remaining)
-  const runLenArr = ts.runLength
 
   do {
     runLength = makeAscendingRun(array, lo, hi, compare)
@@ -506,7 +486,7 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
       runLength = force
     }
     // Push new run and merge if necessary
-    ts.runStart[stackSize] = lo
+    runStart[stackSize] = lo
     runLenArr[stackSize] = runLength
     stackSize += 1
     while (stackSize > 1) {
@@ -516,7 +496,7 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
         if (runLenArr[n - 1] < runLenArr[n + 1]) n--
       } else if (runLenArr[n] > runLenArr[n + 1]) break
 
-      ts.mergeAt(n, stackSize--)
+      ts.mergeAt(n, stackSize--, runLenArr, runStart)
     }
 
     // Go find next run
@@ -528,7 +508,7 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   while (stackSize > 1) {
     let n = stackSize - 2
     if (n > 0 && runLenArr[n - 1] < runLenArr[n + 1]) n--
-    ts.mergeAt(n, stackSize--)
+    ts.mergeAt(n, stackSize--, runLenArr, runStart)
   }
   return array
 }
@@ -682,15 +662,10 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
     while (offset < maxOffset && compare(value, array[startHint + offset] as T) > 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-
-      if (offset <= 0) {
-        offset = maxOffset
-      }
+      if (offset <= 0) offset = maxOffset
     }
 
-    if (offset > maxOffset) {
-      offset = maxOffset
-    }
+    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     lastOffset += hint
@@ -702,14 +677,9 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
     while (offset < maxOffset && compare(value, array[startHint - offset] as T) <= 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-
-      if (offset <= 0) {
-        offset = maxOffset
-      }
+      if (offset <= 0) offset = maxOffset
     }
-    if (offset > maxOffset) {
-      offset = maxOffset
-    }
+    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     tmp = lastOffset
@@ -745,15 +715,15 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
  * @param {function} compare - Item comparison function.
  * @return {number} - The index where to insert value.
  */
-function gallopRight(value, array, start, length, hint, compare) {
+function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
   let lastOffset = 0
   let maxOffset = 0
   let offset = 1
 
-  if (compare(value, array[start + hint]) < 0) {
+  if (compare(value, array[start + hint] as T) < 0) {
     maxOffset = hint + 1
 
-    while (offset < maxOffset && compare(value, array[start + hint - offset]) < 0) {
+    while (offset < maxOffset && compare(value, array[start + hint - offset] as T) < 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
 
@@ -775,7 +745,7 @@ function gallopRight(value, array, start, length, hint, compare) {
   } else {
     maxOffset = length - hint
 
-    while (offset < maxOffset && compare(value, array[start + hint + offset]) >= 0) {
+    while (offset < maxOffset && compare(value, array[start + hint + offset] as T) >= 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
 
@@ -804,7 +774,7 @@ function gallopRight(value, array, start, length, hint, compare) {
   while (lastOffset < offset) {
     const m = lastOffset + ((offset - lastOffset) >>> 1)
 
-    if (compare(value, array[start + m]) < 0) {
+    if (compare(value, array[start + m] as T) < 0) {
       offset = m
     } else {
       lastOffset = m + 1
