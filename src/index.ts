@@ -599,8 +599,8 @@ function alphabeticalCompare(a: number, b: number): number {
       b = -b
     }
 
-    const al = log10(a)
-    const bl = log10(b)
+    const al = Math.log10(a)
+    const bl = Math.log10(b)
 
     let t = 0
 
@@ -853,36 +853,6 @@ function gallopRight(value, array, start, length, hint, compare) {
   }
 
   return offset
-}
-
-/**
- * Estimate the logarithm base 10 of a small integer.
- *
- * @param {number} x - The integer to estimate the logarithm of.
- * @return {number} - The estimated logarithm of the integer.
- */
-function log10(x) {
-  if (x < 1e5) {
-    if (x < 1e2) {
-      return x < 1e1 ? 0 : 1
-    }
-
-    if (x < 1e4) {
-      return x < 1e3 ? 2 : 3
-    }
-
-    return 4
-  }
-
-  if (x < 1e7) {
-    return x < 1e6 ? 5 : 6
-  }
-
-  if (x < 1e9) {
-    return x < 1e8 ? 7 : 8
-  }
-
-  return 9
 }
 
 /**
