@@ -22,19 +22,21 @@ const DEFAULT_TMP_STORAGE_LENGTH = 256
  */
 const POWERS_OF_TEN = new Float32Array([1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9])
 
+type Comparator<T> = (a: T, b: T) => number
+
 class TimSort<T> {
   array: AnyArray<T>
-  compare = null
-  length = 0
+  compare: Comparator<T>
+  length
   minGallop = DEFAULT_MIN_GALLOPING
   runLength: Array<number>
   runStart: Array<number>
-  stackLength = 0
+  stackLength
   stackSize = 0
   tmpStorageLength = DEFAULT_TMP_STORAGE_LENGTH
   tmp: Array<T>
 
-  constructor(array: AnyArray<T>, compare) {
+  constructor(array: AnyArray<T>, compare: Comparator<T>) {
     this.array = array
     this.compare = compare
 
@@ -53,21 +55,6 @@ class TimSort<T> {
   }
 
   /**
-   * Merge all runs on TimSort's stack until only one remains.
-   */
-  forceMergeRuns() {
-    while (this.stackSize > 1) {
-      let n = this.stackSize - 2
-
-      if (n > 0 && this.runLength[n - 1] < this.runLength[n + 1]) {
-        n--
-      }
-
-      this.mergeAt(n)
-    }
-  }
-
-  /**
    * Merge the runs on the stack at positions i and i+1. Must be always be called
    * with i=stackSize-2 or i=stackSize-3 (that is, we merge on top of the stack).
    *
@@ -77,16 +64,17 @@ class TimSort<T> {
     const compare = this.compare
     const array = this.array
     const runLength = this.runLength
+    const runStart = this.runStart
 
-    let start1 = this.runStart[i]
-    let length1 = this.runLength[i]
-    const start2 = this.runStart[i + 1]
+    let start1 = runStart[i]
+    let length1 = runLength[i]
+    const start2 = runStart[i + 1]
     let length2 = runLength[i + 1]
 
     this.runLength[i] = length1 + length2
 
     if (i === this.stackSize - 3) {
-      this.runStart[i + 1] = this.runStart[i + 2]
+      runStart[i + 1] = runStart[i + 2]
       runLength[i + 1] = runLength[i + 2]
     }
 
@@ -118,7 +106,11 @@ class TimSort<T> {
      * Merge remaining runs. A tmp array with length = min(length1, length2) is
      * used
      */
-    ;(length1 <= length2 ? this.mergeLow : this.mergeHigh)(start1, length1, start2, length2)
+    if (length1 <= length2) {
+      this.mergeLow(start1, length1, start2, length2)
+    } else {
+      this.mergeHigh(start1, length1, start2, length2)
+    }
   }
 
   /**
@@ -134,14 +126,14 @@ class TimSort<T> {
    * @param {number} start2 - First element in run2.
    * @param {number} length2 - Length of run2.
    */
-  mergeHigh(start1, length1, start2, length2) {
+  mergeHigh(start1: number, length1: number, start2: number, length2: number): void {
     const compare = this.compare
     const array = this.array
     const tmp = this.tmp
     let i = 0
 
-    for (i = 0; i < length2; i++) {
-      tmp[i] = array[start2 + i]
+    for (i; i < length2; i++) {
+      tmp[i] = array[start2 + i] as T
     }
 
     let cursor1 = start1 + length1 - 1
@@ -184,7 +176,7 @@ class TimSort<T> {
       let exit = false
 
       do {
-        if (compare(tmp[cursor2], array[cursor1]) < 0) {
+        if (compare(tmp[cursor2], array[cursor1] as T) < 0) {
           array[dest--] = array[cursor1--]
           count1++
           count2 = 0
@@ -314,14 +306,14 @@ class TimSort<T> {
    * @param {number} start2 - First element in run2.
    * @param {number} length2 - Length of run2.
    */
-  mergeLow(start1, length1, start2, length2) {
+  mergeLow(start1: number, length1: number, start2: number, length2: number) {
     const compare = this.compare
     const array = this.array
     const tmp = this.tmp
     let i = 0
 
-    for (i = 0; i < length1; i++) {
-      tmp[i] = array[start1 + i]
+    for (; i < length1; i++) {
+      tmp[i] = array[start1 + i] as T
     }
 
     let cursor1 = 0
@@ -353,7 +345,7 @@ class TimSort<T> {
       let exit = false
 
       do {
-        if (compare(array[cursor2], tmp[cursor1]) < 0) {
+        if (compare(array[cursor2] as T, tmp[cursor1]) < 0) {
           array[dest++] = array[cursor2++]
           count2++
           count1 = 0
@@ -457,41 +449,6 @@ class TimSort<T> {
       }
     }
   }
-
-  /**
-   * Merge runs on TimSort's stack so that the following holds for all i:
-   * 1) runLength[i - 3] > runLength[i - 2] + runLength[i - 1]
-   * 2) runLength[i - 2] > runLength[i - 1]
-   */
-  mergeRuns() {
-    while (this.stackSize > 1) {
-      let n = this.stackSize - 2
-
-      if (
-        (n >= 1 && this.runLength[n - 1] <= this.runLength[n] + this.runLength[n + 1]) ||
-        (n >= 2 && this.runLength[n - 2] <= this.runLength[n] + this.runLength[n - 1])
-      ) {
-        if (this.runLength[n - 1] < this.runLength[n + 1]) {
-          n--
-        }
-      } else if (this.runLength[n] > this.runLength[n + 1]) {
-        break
-      }
-      this.mergeAt(n)
-    }
-  }
-
-  /**
-   * Push a new run on TimSort's stack.
-   *
-   * @param {number} runStart - Start index of the run in the original array.
-   * @param {number} runLength - Length of the run;
-   */
-  pushRun(runStart, runLength) {
-    this.runStart[this.stackSize] = runStart
-    this.runLength[this.stackSize] = runLength
-    this.stackSize += 1
-  }
 }
 
 /**
@@ -504,7 +461,7 @@ class TimSort<T> {
  * @param {number} hi - Last element in the range.
  *     comparator.
  */
-export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => number, lo?: number, hi?: number): AnyArray<T> {
+export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => number, lo = 0, hi = array.length): AnyArray<T> {
   /*
    * Handle the case where a comparison function is not provided. We do
    * lexicographic sorting
@@ -515,13 +472,6 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
     hi = lo
     lo = compare
     compare = alphabeticalCompare
-  }
-
-  if (!lo) {
-    lo = 0
-  }
-  if (!hi) {
-    hi = array.length
   }
 
   let remaining = hi - lo
@@ -539,9 +489,10 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
     return array
   }
 
-  const ts = new TimSort(array, compare)
+  const ts = new TimSort(array, compare!)
 
   const minRun = minRunLength(remaining)
+  const runLenArr = ts.runLength
 
   do {
     runLength = makeAscendingRun(array, lo, hi, compare)
@@ -555,8 +506,18 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
       runLength = force
     }
     // Push new run and merge if necessary
-    ts.pushRun(lo, runLength)
-    ts.mergeRuns()
+    ts.runStart[ts.stackSize] = lo
+    runLenArr[ts.stackSize] = runLength
+    ts.stackSize += 1
+    while (ts.stackSize > 1) {
+      let n = ts.stackSize - 2
+
+      if ((n >= 1 && runLenArr[n - 1] <= runLenArr[n] + runLenArr[n + 1]) || (n >= 2 && runLenArr[n - 2] <= runLenArr[n] + runLenArr[n - 1])) {
+        if (runLenArr[n - 1] < runLenArr[n + 1]) n--
+      } else if (runLenArr[n] > runLenArr[n + 1]) break
+
+      ts.mergeAt(n)
+    }
 
     // Go find next run
     remaining -= runLength
@@ -564,7 +525,15 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   } while (remaining !== 0)
 
   // Force merging of remaining runs
-  ts.forceMergeRuns()
+  while (ts.stackSize > 1) {
+    let n = ts.stackSize - 2
+
+    if (n > 0 && runLenArr[n - 1] < runLenArr[n + 1]) {
+      n--
+    }
+
+    ts.mergeAt(n)
+  }
   return array
 }
 
@@ -583,7 +552,7 @@ function alphabeticalCompare(a: number, b: number): number {
 
   if (~~a === a && ~~b === b) {
     if (a === 0 || b === 0) {
-      return a < b ? -1 : 1
+      return a - b
     }
 
     if (a < 0 || b < 0) {
@@ -599,8 +568,8 @@ function alphabeticalCompare(a: number, b: number): number {
       b = -b
     }
 
-    const al = Math.log10(a)
-    const bl = Math.log10(b)
+    const al = Math.log10(a) | 0
+    const bl = Math.log10(b) | 0
 
     let t = 0
 
@@ -614,15 +583,11 @@ function alphabeticalCompare(a: number, b: number): number {
       t = 1
     }
 
-    if (a === b) {
-      return t
-    }
-
-    return a < b ? -1 : 1
+    return a === b ? t : a - b
   }
 
-  const aStr = String(a)
-  const bStr = String(b)
+  const aStr = `${a}`
+  const bStr = `${b}`
 
   if (aStr === bStr) {
     return 0
@@ -708,15 +673,17 @@ function binaryInsertionSort(array, lo, hi, start, compare) {
  * @param {function} compare - Item comparison function.
  * @return {number} - The index where to insert value.
  */
-function gallopLeft(value, array, start, length, hint, compare) {
+function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
+  const startHint = start + hint
   let lastOffset = 0
   let maxOffset = 0
   let offset = 1
+  let tmp
 
-  if (compare(value, array[start + hint]) > 0) {
+  if (compare(value, array[startHint] as T) > 0) {
     maxOffset = length - hint
 
-    while (offset < maxOffset && compare(value, array[start + hint + offset]) > 0) {
+    while (offset < maxOffset && compare(value, array[startHint + offset] as T) > 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
 
@@ -736,7 +703,7 @@ function gallopLeft(value, array, start, length, hint, compare) {
     // value <= array[start + hint]
   } else {
     maxOffset = hint + 1
-    while (offset < maxOffset && compare(value, array[start + hint - offset]) <= 0) {
+    while (offset < maxOffset && compare(value, array[startHint - offset] as T) <= 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
 
@@ -749,7 +716,7 @@ function gallopLeft(value, array, start, length, hint, compare) {
     }
 
     // Make offsets relative to start
-    const tmp = lastOffset
+    tmp = lastOffset
     lastOffset = hint - offset
     offset = hint - tmp
   }
@@ -762,13 +729,9 @@ function gallopLeft(value, array, start, length, hint, compare) {
    */
   lastOffset++
   while (lastOffset < offset) {
-    const m = lastOffset + ((offset - lastOffset) >>> 1)
-
-    if (compare(value, array[start + m]) > 0) {
-      lastOffset = m + 1
-    } else {
-      offset = m
-    }
+    tmp = lastOffset + ((offset - lastOffset) >>> 1)
+    if (compare(value, array[start + tmp] as T) > 0) lastOffset = tmp + 1
+    else offset = tmp
   }
   return offset
 }
