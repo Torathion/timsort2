@@ -30,3 +30,10 @@ await build({
   console.error(err)
   process.exit(1)
 })
+
+await build({
+  ...buildOptions,
+  format: 'esm',
+  entryPoints: ['./benchmark/index.ts'],
+  outfile: './benchmark/index.js'
+})
