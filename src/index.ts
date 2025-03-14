@@ -32,7 +32,6 @@ class TimSort<T> {
   runLength: Array<number>
   runStart: Array<number>
   stackLength
-  stackSize = 0
   tmpStorageLength = DEFAULT_TMP_STORAGE_LENGTH
   tmp: Array<T>
 
@@ -60,7 +59,7 @@ class TimSort<T> {
    *
    * @param {number} i - Index of the run to merge in TimSort's stack.
    */
-  mergeAt(i: number) {
+  mergeAt(i: number, stackSize: number) {
     const compare = this.compare
     const array = this.array
     const runLength = this.runLength
@@ -73,12 +72,12 @@ class TimSort<T> {
 
     this.runLength[i] = length1 + length2
 
-    if (i === this.stackSize - 3) {
+    if (i === stackSize - 3) {
       runStart[i + 1] = runStart[i + 2]
       runLength[i + 1] = runLength[i + 2]
     }
 
-    this.stackSize--
+    stackSize--
 
     /*
      * Find where the first element in the second run goes in run1. Previous
@@ -490,6 +489,7 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   }
 
   const ts = new TimSort(array, compare!)
+  let stackSize = 0
 
   const minRun = minRunLength(remaining)
   const runLenArr = ts.runLength
@@ -506,17 +506,17 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
       runLength = force
     }
     // Push new run and merge if necessary
-    ts.runStart[ts.stackSize] = lo
-    runLenArr[ts.stackSize] = runLength
-    ts.stackSize += 1
-    while (ts.stackSize > 1) {
-      let n = ts.stackSize - 2
+    ts.runStart[stackSize] = lo
+    runLenArr[stackSize] = runLength
+    stackSize += 1
+    while (stackSize > 1) {
+      let n = stackSize - 2
 
       if ((n >= 1 && runLenArr[n - 1] <= runLenArr[n] + runLenArr[n + 1]) || (n >= 2 && runLenArr[n - 2] <= runLenArr[n] + runLenArr[n - 1])) {
         if (runLenArr[n - 1] < runLenArr[n + 1]) n--
       } else if (runLenArr[n] > runLenArr[n + 1]) break
 
-      ts.mergeAt(n)
+      ts.mergeAt(n, stackSize--)
     }
 
     // Go find next run
@@ -525,14 +525,10 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   } while (remaining !== 0)
 
   // Force merging of remaining runs
-  while (ts.stackSize > 1) {
-    let n = ts.stackSize - 2
-
-    if (n > 0 && runLenArr[n - 1] < runLenArr[n + 1]) {
-      n--
-    }
-
-    ts.mergeAt(n)
+  while (stackSize > 1) {
+    let n = stackSize - 2
+    if (n > 0 && runLenArr[n - 1] < runLenArr[n + 1]) n--
+    ts.mergeAt(n, stackSize--)
   }
   return array
 }
