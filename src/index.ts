@@ -18,7 +18,7 @@ const DEFAULT_TMP_STORAGE_LENGTH = 256
  * Pre-computed powers of 10 for efficient lexicographic comparison of
  * small integers.
  */
-const POWERS_OF_TEN = [1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
+const POWERS_OF_TEN = new Float32Array([1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9])
 
 class TimSort {
   array = null
