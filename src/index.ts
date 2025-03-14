@@ -95,7 +95,7 @@ class TimSort<T> {
      * Find where the last element in the first run goes in run2. Next elements
      * in run2 are already in place
      */
-    length2 = gallopLeft(array[start1 + length1 - 1], array, start2, length2, length2 - 1, compare)
+    length2 = gallopLeft(array[start1 + length1 - 1] as T, array, start2, length2, length2 - 1, compare)
 
     if (length2 === 0) {
       return
@@ -225,7 +225,7 @@ class TimSort<T> {
           break
         }
 
-        count2 = length2 - gallopLeft(array[cursor1], tmp, 0, length2, length2 - 1, compare)
+        count2 = length2 - gallopLeft(array[cursor1] as T, tmp, 0, length2, length2 - 1, compare)
 
         if (count2 !== 0) {
           dest -= count2
@@ -838,7 +838,14 @@ function makeAscendingRun(array, lo, hi, compare) {
       runHi++
     }
 
-    reverseRun(array, lo, runHi)
+    // Reverse array in range of lo to runHi
+    runHi--
+    while (lo < runHi) {
+      const t = array[lo]
+      array[lo++] = array[runHi]
+      array[runHi--] = t
+    }
+    runHi++
     // Ascending
   } else {
     while (runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0) {
@@ -854,30 +861,13 @@ function makeAscendingRun(array, lo, hi, compare) {
  *
  * @param {number} n - The size of the array to sort.
  */
-function minRunLength(n) {
+function minRunLength(remaining: number) {
   let r = 0
 
-  while (n >= DEFAULT_MIN_MERGE) {
-    r |= n & 1
-    n >>= 1
+  while (remaining >= DEFAULT_MIN_MERGE) {
+    r |= remaining & 1
+    remaining >>= 1
   }
 
-  return n + r
-}
-
-/**
- * Reverse an array in the range [lo, hi).
- *
- * @param {array} array - The array to reverse.
- * @param {number} lo - First element in the range (inclusive).
- * @param {number} hi - Last element in the range.
- */
-function reverseRun(array, lo, hi) {
-  hi--
-
-  while (lo < hi) {
-    const t = array[lo]
-    array[lo++] = array[hi]
-    array[hi--] = t
-  }
+  return remaining + r
 }
