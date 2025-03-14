@@ -1,3 +1,5 @@
+import type { AnyArray } from 'typestar'
+
 /**
  * Default minimum size of a run.
  */
@@ -20,30 +22,31 @@ const DEFAULT_TMP_STORAGE_LENGTH = 256
  */
 const POWERS_OF_TEN = new Float32Array([1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9])
 
-class TimSort {
-  array = null
+class TimSort<T> {
+  array: AnyArray<T>
   compare = null
   length = 0
   minGallop = DEFAULT_MIN_GALLOPING
-  runLength = null
-  runStart = null
+  runLength: Array<number>
+  runStart: Array<number>
   stackLength = 0
   stackSize = 0
   tmpStorageLength = DEFAULT_TMP_STORAGE_LENGTH
+  tmp: Array<T>
 
-  constructor(array, compare) {
+  constructor(array: AnyArray<T>, compare) {
     this.array = array
     this.compare = compare
 
-    this.length = array.length
+    const len = (this.length = array.length)
 
-    if (this.length < 2 * DEFAULT_TMP_STORAGE_LENGTH) {
-      this.tmpStorageLength = this.length >>> 1
+    if (len < 2 * DEFAULT_TMP_STORAGE_LENGTH) {
+      this.tmpStorageLength = len >>> 1
     }
 
     this.tmp = new Array(this.tmpStorageLength)
 
-    this.stackLength = this.length < 120 ? 5 : this.length < 1542 ? 10 : this.length < 119151 ? 19 : 40
+    this.stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
 
     this.runStart = new Array(this.stackLength)
     this.runLength = new Array(this.stackLength)
@@ -70,20 +73,21 @@ class TimSort {
    *
    * @param {number} i - Index of the run to merge in TimSort's stack.
    */
-  mergeAt(i) {
+  mergeAt(i: number) {
     const compare = this.compare
     const array = this.array
+    const runLength = this.runLength
 
     let start1 = this.runStart[i]
     let length1 = this.runLength[i]
     const start2 = this.runStart[i + 1]
-    let length2 = this.runLength[i + 1]
+    let length2 = runLength[i + 1]
 
     this.runLength[i] = length1 + length2
 
     if (i === this.stackSize - 3) {
       this.runStart[i + 1] = this.runStart[i + 2]
-      this.runLength[i + 1] = this.runLength[i + 2]
+      runLength[i + 1] = runLength[i + 2]
     }
 
     this.stackSize--
@@ -114,11 +118,7 @@ class TimSort {
      * Merge remaining runs. A tmp array with length = min(length1, length2) is
      * used
      */
-    if (length1 <= length2) {
-      this.mergeLow(start1, length1, start2, length2)
-    } else {
-      this.mergeHigh(start1, length1, start2, length2)
-    }
+    ;(length1 <= length2 ? this.mergeLow : this.mergeHigh)(start1, length1, start2, length2)
   }
 
   /**
@@ -504,7 +504,7 @@ class TimSort {
  * @param {number} hi - Last element in the range.
  *     comparator.
  */
-export default function sort(array, compare, lo, hi) {
+export default function sort<T>(array: AnyArray<T>, compare: (a: T, b: T) => number, lo?: number, hi?: number): AnyArray<T> {
   if (!Array.isArray(array)) {
     throw new TypeError('Can only sort arrays')
   }
@@ -532,7 +532,7 @@ export default function sort(array, compare, lo, hi) {
 
   // The array is already sorted
   if (remaining < 2) {
-    return
+    return array
   }
 
   let runLength = 0
@@ -540,7 +540,7 @@ export default function sort(array, compare, lo, hi) {
   if (remaining < DEFAULT_MIN_MERGE) {
     runLength = makeAscendingRun(array, lo, hi, compare)
     binaryInsertionSort(array, lo, hi, lo + runLength, compare)
-    return
+    return array
   }
 
   const ts = new TimSort(array, compare)
@@ -569,6 +569,7 @@ export default function sort(array, compare, lo, hi) {
 
   // Force merging of remaining runs
   ts.forceMergeRuns()
+  return array
 }
 
 /**
@@ -579,7 +580,7 @@ export default function sort(array, compare, lo, hi) {
  * @return {number} - A positive number if a.toString() > b.toString(), a
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
-function alphabeticalCompare(a, b) {
+function alphabeticalCompare(a: number, b: number): number {
   if (a === b) {
     return 0
   }
