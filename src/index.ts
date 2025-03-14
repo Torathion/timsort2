@@ -504,11 +504,7 @@ class TimSort<T> {
  * @param {number} hi - Last element in the range.
  *     comparator.
  */
-export default function sort<T>(array: AnyArray<T>, compare: (a: T, b: T) => number, lo?: number, hi?: number): AnyArray<T> {
-  if (!Array.isArray(array)) {
-    throw new TypeError('Can only sort arrays')
-  }
-
+export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => number, lo?: number, hi?: number): AnyArray<T> {
   /*
    * Handle the case where a comparison function is not provided. We do
    * lexicographic sorting
