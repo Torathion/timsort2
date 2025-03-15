@@ -24,395 +24,6 @@ const POWERS_OF_TEN = new Float32Array([1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e
 
 type Comparator<T> = (a: T, b: T) => number
 
-class TimSort<T> {
-  array: AnyArray<T>
-  compare: Comparator<T>
-  minGallop = DEFAULT_MIN_GALLOPING
-  tmp: Array<T>
-
-  constructor(array: AnyArray<T>, len: number, compare: Comparator<T>) {
-    this.array = array
-    this.compare = compare
-    this.tmp = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >> 1 : DEFAULT_TMP_STORAGE_LENGTH)
-  }
-
-  /**
-   * Merge the runs on the stack at positions i and i+1. Must be always be called
-   * with i=stackSize-2 or i=stackSize-3 (that is, we merge on top of the stack).
-   *
-   * @param i - Index of the run to merge in TimSort's stack.
-   */
-  mergeAt(i: number, stackSize: number, runLength: number[], runStart: number[]) {
-    const compare = this.compare
-    const array = this.array
-
-    let start1 = runStart[i]
-    let length1 = runLength[i]
-    const start2 = runStart[i + 1]
-    let length2 = runLength[i + 1]
-
-    runLength[i] = length1 + length2
-
-    if (i === stackSize - 3) {
-      runStart[i + 1] = runStart[i + 2]
-      runLength[i + 1] = runLength[i + 2]
-    }
-
-    /*
-     * Find where the first element in the second run goes in run1. Previous
-     * elements in run1 are already in place
-     */
-    const k = gallopRight(array[start2] as T, array, start1, length1, 0, compare)
-    start1 += k
-    length1 -= k
-
-    if (length1 === 0) return
-
-    /*
-     * Find where the last element in the first run goes in run2. Next elements
-     * in run2 are already in place
-     */
-    length2 = gallopLeft(array[start1 + length1 - 1] as T, array, start2, length2, length2 - 1, compare)
-
-    if (length2 === 0) return
-
-    /*
-     * Merge remaining runs. A tmp array with length = min(length1, length2) is
-     * used
-     */
-    if (length1 <= length2) {
-      this.mergeLow(start1, length1, start2, length2)
-    } else {
-      this.mergeHigh(start1, length1, start2, length2)
-    }
-  }
-
-  /**
-   * Merge two adjacent runs in a stable way. The runs must be such that the
-   * first element of run1 is bigger than the first element in run2 and the
-   * last element of run1 is greater than all the elements in run2.
-   * The method should be called when run1.length > run2.length as it uses
-   * TimSort temporary array to store run2. Use mergeLow if run1.length <=
-   * run2.length.
-   *
-   * @param start1 - First element in run1.
-   * @param length1 - Length of run1.
-   * @param start2 - First element in run2.
-   * @param length2 - Length of run2.
-   */
-  mergeHigh(start1: number, length1: number, start2: number, length2: number): void {
-    const compare = this.compare
-    const array = this.array
-    const tmp = this.tmp
-    let i = 0
-
-    for (i; i < length2; i++) {
-      tmp[i] = array[start2 + i] as T
-    }
-
-    let cursor1 = start1 + length1 - 1
-    let cursor2 = length2 - 1
-    let dest = start2 + length2 - 1
-    let customCursor = 0
-    let customDest = 0
-
-    array[dest--] = array[cursor1--]
-
-    if (--length1 === 0) {
-      customCursor = dest - (length2 - 1)
-
-      for (i = 0; i < length2; i++) {
-        array[customCursor + i] = tmp[i]
-      }
-
-      return
-    }
-
-    if (length2 === 1) {
-      dest -= length1
-      cursor1 -= length1
-      customDest = dest + 1
-      customCursor = cursor1 + 1
-
-      for (i = length1 - 1; i >= 0; i--) {
-        array[customDest + i] = array[customCursor + i]
-      }
-
-      array[dest] = tmp[cursor2]
-      return
-    }
-
-    let minGallop = this.minGallop
-
-    while (true) {
-      let count1 = 0
-      let count2 = 0
-      let exit = false
-
-      do {
-        if (compare(tmp[cursor2], array[cursor1] as T) < 0) {
-          array[dest--] = array[cursor1--]
-          count1++
-          count2 = 0
-          if (--length1 === 0) {
-            exit = true
-            break
-          }
-        } else {
-          array[dest--] = tmp[cursor2--]
-          count2++
-          count1 = 0
-          if (--length2 === 1) {
-            exit = true
-            break
-          }
-        }
-      } while ((count1 | count2) < minGallop)
-
-      if (exit) break
-      do {
-        count1 = length1 - gallopRight(tmp[cursor2], array, start1, length1, length1 - 1, compare)
-
-        if (count1 !== 0) {
-          dest -= count1
-          cursor1 -= count1
-          length1 -= count1
-          customDest = dest + 1
-          customCursor = cursor1 + 1
-
-          for (i = count1 - 1; i >= 0; i--) {
-            array[customDest + i] = array[customCursor + i]
-          }
-
-          if (length1 === 0) {
-            exit = true
-            break
-          }
-        }
-
-        array[dest--] = tmp[cursor2--]
-
-        if (--length2 === 1) {
-          exit = true
-          break
-        }
-
-        count2 = length2 - gallopLeft(array[cursor1] as T, tmp, 0, length2, length2 - 1, compare)
-
-        if (count2 !== 0) {
-          dest -= count2
-          cursor2 -= count2
-          length2 -= count2
-          customDest = dest + 1
-          customCursor = cursor2 + 1
-
-          for (i = 0; i < count2; i++) {
-            array[customDest + i] = tmp[customCursor + i]
-          }
-
-          if (length2 <= 1) {
-            exit = true
-            break
-          }
-        }
-
-        array[dest--] = array[cursor1--]
-
-        if (--length1 === 0) {
-          exit = true
-          break
-        }
-
-        minGallop--
-      } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING)
-
-      if (exit) {
-        break
-      }
-
-      if (minGallop < 0) {
-        minGallop = 0
-      }
-
-      minGallop += 2
-    }
-
-    this.minGallop = minGallop
-
-    if (minGallop < 1) {
-      this.minGallop = 1
-    }
-
-    if (length2 === 1) {
-      dest -= length1
-      cursor1 -= length1
-      customDest = dest + 1
-      customCursor = cursor1 + 1
-
-      for (i = length1 - 1; i >= 0; i--) {
-        array[customDest + i] = array[customCursor + i]
-      }
-
-      array[dest] = tmp[cursor2]
-    } else if (length2 === 0) {
-      throw new Error('mergeHigh preconditions were not respected')
-    } else {
-      customCursor = dest - (length2 - 1)
-      for (i = 0; i < length2; i++) {
-        array[customCursor + i] = tmp[i]
-      }
-    }
-  }
-
-  /**
-   * Merge two adjacent runs in a stable way. The runs must be such that the
-   * first element of run1 is bigger than the first element in run2 and the
-   * last element of run1 is greater than all the elements in run2.
-   * The method should be called when run1.length <= run2.length as it uses
-   * TimSort temporary array to store run1. Use mergeHigh if run1.length >
-   * run2.length.
-   *
-   * @param start1 - First element in run1.
-   * @param length1 - Length of run1.
-   * @param start2 - First element in run2.
-   * @param length2 - Length of run2.
-   */
-  mergeLow(start1: number, length1: number, start2: number, length2: number) {
-    const compare = this.compare
-    const array = this.array
-    const tmp = this.tmp
-    let i = 0
-
-    for (; i < length1; i++) {
-      tmp[i] = array[start1 + i] as T
-    }
-
-    let cursor1 = 0
-    let cursor2 = start2
-    let dest = start1
-
-    array[dest++] = array[cursor2++]
-
-    if (--length2 === 0) {
-      for (i = 0; i < length1; i++) {
-        array[dest + i] = tmp[cursor1 + i]
-      }
-      return
-    }
-
-    if (length1 === 1) {
-      for (i = 0; i < length2; i++) {
-        array[dest + i] = array[cursor2 + i]
-      }
-      array[dest + length2] = tmp[cursor1]
-      return
-    }
-
-    let minGallop = this.minGallop
-
-    while (true) {
-      let count1 = 0
-      let count2 = 0
-      let exit = false
-
-      do {
-        if (compare(array[cursor2] as T, tmp[cursor1]) < 0) {
-          array[dest++] = array[cursor2++]
-          count2++
-          count1 = 0
-
-          if (--length2 === 0) {
-            exit = true
-            break
-          }
-        } else {
-          array[dest++] = tmp[cursor1++]
-          count1++
-          count2 = 0
-          if (--length1 === 1) {
-            exit = true
-            break
-          }
-        }
-      } while ((count1 | count2) < minGallop)
-
-      if (exit) {
-        break
-      }
-
-      do {
-        count1 = gallopRight(array[cursor2] as T, tmp, cursor1, length1, 0, compare)
-
-        if (count1 !== 0) {
-          for (i = 0; i < count1; i++) {
-            array[dest + i] = tmp[cursor1 + i]
-          }
-
-          dest += count1
-          cursor1 += count1
-          length1 -= count1
-          if (length1 <= 1) {
-            exit = true
-            break
-          }
-        }
-
-        array[dest++] = array[cursor2++]
-
-        if (--length2 === 0) {
-          exit = true
-          break
-        }
-
-        count2 = gallopLeft(tmp[cursor1], array, cursor2, length2, 0, compare)
-
-        if (count2 !== 0) {
-          for (i = 0; i < count2; i++) {
-            array[dest + i] = array[cursor2 + i]
-          }
-
-          dest += count2
-          cursor2 += count2
-          length2 -= count2
-
-          if (length2 === 0) {
-            exit = true
-            break
-          }
-        }
-        array[dest++] = tmp[cursor1++]
-
-        if (--length1 === 1) {
-          exit = true
-          break
-        }
-
-        minGallop--
-      } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING)
-
-      if (exit) break
-      if (minGallop < 0) minGallop = 0
-      minGallop += 2
-    }
-
-    this.minGallop = minGallop
-    if (minGallop < 1) this.minGallop = 1
-
-    if (length1 === 1) {
-      for (i = 0; i < length2; i++) {
-        array[dest + i] = array[cursor2 + i]
-      }
-      array[dest + length2] = tmp[cursor1]
-    } else if (length1 === 0) {
-      throw new Error('mergeLow preconditions were not respected')
-    } else {
-      for (i = 0; i < length1; i++) {
-        array[dest + i] = tmp[cursor1 + i]
-      }
-    }
-  }
-}
-
 /**
  * Sort an array in the range [lo, hi) using TimSort.
  *
@@ -438,7 +49,6 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
   }
 
   const len = array.length
-  const ts = new TimSort(array, len, compare)
 
   let stackSize = 0
   const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
@@ -453,6 +63,8 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
     y >>= 1
   }
   const minRun = x + y
+  let minGallop = DEFAULT_MIN_GALLOPING
+  const tmp: T[] = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >> 1 : DEFAULT_TMP_STORAGE_LENGTH)
   // Do runs
   do {
     runLength = makeAscendingRun(array, lo, hi, compare)
@@ -476,7 +88,7 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
         if (runLenArr[n - 1] < runLenArr[n + 1]) n--
       } else if (runLenArr[n] > runLenArr[n + 1]) break
 
-      ts.mergeAt(n, stackSize--, runLenArr, runStart)
+      minGallop = mergeAt(array, compare, tmp, n, stackSize--, runLenArr, runStart, minGallop)
     }
 
     // Go find next run
@@ -488,7 +100,7 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
   while (stackSize > 1) {
     let n = stackSize - 2
     if (n > 0 && runLenArr[n - 1] < runLenArr[n + 1]) n--
-    ts.mergeAt(n, stackSize--, runLenArr, runStart)
+    minGallop = mergeAt(array, compare, tmp, n, stackSize--, runLenArr, runStart, minGallop)
   }
   return array
 }
@@ -508,7 +120,6 @@ export function alphabeticalCompare(a: any, b: any): number {
 
   if (~~a === a && ~~b === b) {
     if (a === 0 || b === 0) return a - b
-
 
     if (a < 0 || b < 0) {
       if (b >= 0) return -1
@@ -770,3 +381,362 @@ function makeAscendingRun<T>(array: AnyArray<T>, lo: number, hi: number, compare
 
   return runHi - lo
 }
+
+/**
+ * Merge the runs on the stack at positions i and i+1. Must be always be called
+ * with i=stackSize-2 or i=stackSize-3 (that is, we merge on top of the stack).
+ *
+ * @param i - Index of the run to merge in TimSort's stack.
+ */
+function mergeAt<T>(array: AnyArray<T>, compare: Comparator<T>, tmp: Array<T>, i: number, stackSize: number, runLength: number[], runStart: number[], minGallop: number): number {
+    let start1 = runStart[i]
+    let length1 = runLength[i]
+    const start2 = runStart[i + 1]
+    let length2 = runLength[i + 1]
+
+    runLength[i] = length1 + length2
+
+    if (i === stackSize - 3) {
+      runStart[i + 1] = runStart[i + 2]
+      runLength[i + 1] = runLength[i + 2]
+    }
+
+    /*
+     * Find where the first element in the second run goes in run1. Previous
+     * elements in run1 are already in place
+     */
+    const k = gallopRight(array[start2] as T, array, start1, length1, 0, compare)
+    start1 += k
+    length1 -= k
+
+    if (length1 === 0) return minGallop
+
+    /*
+     * Find where the last element in the first run goes in run2. Next elements
+     * in run2 are already in place
+     */
+    length2 = gallopLeft(array[start1 + length1 - 1] as T, array, start2, length2, length2 - 1, compare)
+
+    if (length2 === 0) return minGallop
+
+    /*
+     * Merge remaining runs. A tmp array with length = min(length1, length2) is
+     * used
+     */
+    if (length1 <= length2) {
+      return mergeLow(array, compare, tmp, start1, length1, start2, length2, minGallop)
+    } else {
+      return mergeHigh(array, compare, tmp, start1, length1, start2, length2, minGallop)
+    }
+  }
+
+  /**
+   * Merge two adjacent runs in a stable way. The runs must be such that the
+   * first element of run1 is bigger than the first element in run2 and the
+   * last element of run1 is greater than all the elements in run2.
+   * The method should be called when run1.length > run2.length as it uses
+   * TimSort temporary array to store run2. Use mergeLow if run1.length <=
+   * run2.length.
+   *
+   * @param start1 - First element in run1.
+   * @param length1 - Length of run1.
+   * @param start2 - First element in run2.
+   * @param length2 - Length of run2.
+   */
+function mergeHigh<T>(array: AnyArray<T>, compare: Comparator<T>, tmp: Array<T>, start1: number, length1: number, start2: number, length2: number, minGallop: number): number {
+    let i = 0
+
+    for (i; i < length2; i++) {
+      tmp[i] = array[start2 + i] as T
+    }
+
+    let cursor1 = start1 + length1 - 1
+    let cursor2 = length2 - 1
+    let dest = start2 + length2 - 1
+    let customCursor = 0
+    let customDest = 0
+
+    array[dest--] = array[cursor1--]
+
+    if (--length1 === 0) {
+      customCursor = dest - (length2 - 1)
+
+      for (i = 0; i < length2; i++) {
+        array[customCursor + i] = tmp[i]
+      }
+
+      return minGallop
+    }
+
+    if (length2 === 1) {
+      dest -= length1
+      cursor1 -= length1
+      customDest = dest + 1
+      customCursor = cursor1 + 1
+
+      for (i = length1 - 1; i >= 0; i--) {
+        array[customDest + i] = array[customCursor + i]
+      }
+
+      array[dest] = tmp[cursor2]
+      return minGallop
+    }
+
+    while (true) {
+      let count1 = 0
+      let count2 = 0
+      let exit = false
+
+      do {
+        if (compare(tmp[cursor2], array[cursor1] as T) < 0) {
+          array[dest--] = array[cursor1--]
+          count1++
+          count2 = 0
+          if (--length1 === 0) {
+            exit = true
+            break
+          }
+        } else {
+          array[dest--] = tmp[cursor2--]
+          count2++
+          count1 = 0
+          if (--length2 === 1) {
+            exit = true
+            break
+          }
+        }
+      } while ((count1 | count2) < minGallop)
+
+      if (exit) break
+      do {
+        count1 = length1 - gallopRight(tmp[cursor2], array, start1, length1, length1 - 1, compare)
+
+        if (count1 !== 0) {
+          dest -= count1
+          cursor1 -= count1
+          length1 -= count1
+          customDest = dest + 1
+          customCursor = cursor1 + 1
+
+          for (i = count1 - 1; i >= 0; i--) {
+            array[customDest + i] = array[customCursor + i]
+          }
+
+          if (length1 === 0) {
+            exit = true
+            break
+          }
+        }
+
+        array[dest--] = tmp[cursor2--]
+
+        if (--length2 === 1) {
+          exit = true
+          break
+        }
+
+        count2 = length2 - gallopLeft(array[cursor1] as T, tmp, 0, length2, length2 - 1, compare)
+
+        if (count2 !== 0) {
+          dest -= count2
+          cursor2 -= count2
+          length2 -= count2
+          customDest = dest + 1
+          customCursor = cursor2 + 1
+
+          for (i = 0; i < count2; i++) {
+            array[customDest + i] = tmp[customCursor + i]
+          }
+
+          if (length2 <= 1) {
+            exit = true
+            break
+          }
+        }
+
+        array[dest--] = array[cursor1--]
+
+        if (--length1 === 0) {
+          exit = true
+          break
+        }
+
+        minGallop--
+      } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING)
+
+      if (exit) {
+        break
+      }
+
+      if (minGallop < 0) {
+        minGallop = 0
+      }
+
+      minGallop += 2
+    }
+
+    if (minGallop < 1) minGallop = 1
+
+    if (length2 === 1) {
+      dest -= length1
+      cursor1 -= length1
+      customDest = dest + 1
+      customCursor = cursor1 + 1
+
+      for (i = length1 - 1; i >= 0; i--) {
+        array[customDest + i] = array[customCursor + i]
+      }
+
+      array[dest] = tmp[cursor2]
+    } else if (length2 === 0) {
+      throw new Error('mergeHigh preconditions were not respected')
+    } else {
+      customCursor = dest - (length2 - 1)
+      for (i = 0; i < length2; i++) {
+        array[customCursor + i] = tmp[i]
+      }
+    }
+    return minGallop
+  }
+
+  /**
+   * Merge two adjacent runs in a stable way. The runs must be such that the
+   * first element of run1 is bigger than the first element in run2 and the
+   * last element of run1 is greater than all the elements in run2.
+   * The method should be called when run1.length <= run2.length as it uses
+   * TimSort temporary array to store run1. Use mergeHigh if run1.length >
+   * run2.length.
+   *
+   * @param start1 - First element in run1.
+   * @param length1 - Length of run1.
+   * @param start2 - First element in run2.
+   * @param length2 - Length of run2.
+   */
+function mergeLow<T>(array: AnyArray<T>, compare: Comparator<T>, tmp: Array<T>, start1: number, length1: number, start2: number, length2: number, minGallop: number): number {
+    let i = 0
+
+    for (; i < length1; i++) {
+      tmp[i] = array[start1 + i] as T
+    }
+
+    let cursor1 = 0
+    let cursor2 = start2
+    let dest = start1
+
+    array[dest++] = array[cursor2++]
+
+    if (--length2 === 0) {
+      for (i = 0; i < length1; i++) {
+        array[dest + i] = tmp[cursor1 + i]
+      }
+      return minGallop
+    }
+
+    if (length1 === 1) {
+      for (i = 0; i < length2; i++) {
+        array[dest + i] = array[cursor2 + i]
+      }
+      array[dest + length2] = tmp[cursor1]
+      return minGallop
+    }
+
+    while (true) {
+      let count1 = 0
+      let count2 = 0
+      let exit = false
+
+      do {
+        if (compare(array[cursor2] as T, tmp[cursor1]) < 0) {
+          array[dest++] = array[cursor2++]
+          count2++
+          count1 = 0
+
+          if (--length2 === 0) {
+            exit = true
+            break
+          }
+        } else {
+          array[dest++] = tmp[cursor1++]
+          count1++
+          count2 = 0
+          if (--length1 === 1) {
+            exit = true
+            break
+          }
+        }
+      } while ((count1 | count2) < minGallop)
+
+      if (exit) break
+
+
+      do {
+        count1 = gallopRight(array[cursor2] as T, tmp, cursor1, length1, 0, compare)
+
+        if (count1 !== 0) {
+          for (i = 0; i < count1; i++) {
+            array[dest + i] = tmp[cursor1 + i]
+          }
+
+          dest += count1
+          cursor1 += count1
+          length1 -= count1
+          if (length1 <= 1) {
+            exit = true
+            break
+          }
+        }
+
+        array[dest++] = array[cursor2++]
+
+        if (--length2 === 0) {
+          exit = true
+          break
+        }
+
+        count2 = gallopLeft(tmp[cursor1], array, cursor2, length2, 0, compare)
+
+        if (count2 !== 0) {
+          for (i = 0; i < count2; i++) {
+            array[dest + i] = array[cursor2 + i]
+          }
+
+          dest += count2
+          cursor2 += count2
+          length2 -= count2
+
+          if (length2 === 0) {
+            exit = true
+            break
+          }
+        }
+        array[dest++] = tmp[cursor1++]
+
+        if (--length1 === 1) {
+          exit = true
+          break
+        }
+
+        minGallop--
+      } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING)
+
+      if (exit) break
+      if (minGallop < 0) minGallop = 0
+      minGallop += 2
+    }
+
+    if (minGallop < 1) minGallop = 1
+
+    if (length1 === 1) {
+      for (i = 0; i < length2; i++) {
+        array[dest + i] = array[cursor2 + i]
+      }
+      array[dest + length2] = tmp[cursor1]
+    } else if (length1 === 0) {
+      throw new Error('mergeLow preconditions were not respected')
+    } else {
+      for (i = 0; i < length1; i++) {
+        array[dest + i] = tmp[cursor1 + i]
+      }
+    }
+    return minGallop
+  }
