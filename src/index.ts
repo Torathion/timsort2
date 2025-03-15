@@ -423,19 +423,7 @@ class TimSort<T> {
  * @param {number} hi - Last element in the range.
  *     comparator.
  */
-export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => number, lo = 0, hi = array.length): AnyArray<T> {
-  /*
-   * Handle the case where a comparison function is not provided. We do
-   * lexicographic sorting
-   */
-  if (!compare) {
-    compare = alphabeticalCompare
-  } else if (typeof compare !== 'function') {
-    hi = lo
-    lo = compare
-    compare = alphabeticalCompare
-  }
-
+export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
   let remaining = hi - lo
 
   // The array is already sorted
@@ -446,8 +434,8 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   let runLength = 0
   // On small arrays binary sort can be used directly
   if (remaining < DEFAULT_MIN_MERGE) {
-    runLength = makeAscendingRun(array, lo, hi, compare!)
-    binaryInsertionSort(array, lo, hi, lo + runLength, compare!)
+    runLength = makeAscendingRun(array, lo, hi, compare)
+    binaryInsertionSort(array, lo, hi, lo + runLength, compare)
     return array
   }
 
@@ -469,14 +457,14 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   const minRun = x + y
   // Do runs
   do {
-    runLength = makeAscendingRun(array, lo, hi, compare!)
+    runLength = makeAscendingRun(array, lo, hi, compare)
     if (runLength < minRun) {
       let force = remaining
       if (force > minRun) {
         force = minRun
       }
 
-      binaryInsertionSort(array, lo, lo + force, lo + runLength, compare!)
+      binaryInsertionSort(array, lo, lo + force, lo + runLength, compare)
       runLength = force
     }
     // Push new run and merge if necessary
@@ -515,7 +503,7 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
  * @return {number} - A positive number if a.toString() > b.toString(), a
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
-function alphabeticalCompare(a: number, b: number): number {
+export function alphabeticalCompare(a: any, b: any): number {
   if (a === b) {
     return 0
   }

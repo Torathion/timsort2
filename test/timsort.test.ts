@@ -1,7 +1,7 @@
 'use strict'
 
 import { describe, it, expect } from 'vitest'
-import sort from '../src'
+import sort, { alphabeticalCompare } from '../src'
 import ArrayGenerator from './ArrayGenerator'
 
 var lengths = [10, 100, 1000, 10000]
@@ -448,7 +448,7 @@ describe('Lexicographically Sort Subrange of a Random Array', () => {
         const arr1 = ArrayGenerator.randomInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -470,7 +470,7 @@ describe('Lexicographically Sort Subrange of a Descending Array', () => {
         const arr1 = ArrayGenerator.descendingInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -492,7 +492,7 @@ describe('Lexicographically Sort Subrange of an Ascending Array', () => {
         const arr1 = ArrayGenerator.ascendingInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -514,7 +514,7 @@ describe('Lexicographically Sort Subrange of an Ascending Array with 3 Random Ex
         const arr1 = ArrayGenerator.ascending3RandomExchangesInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -536,7 +536,7 @@ describe('Lexicographically Sort Subrange of an Ascending Array with 10 Random E
         const arr1 = ArrayGenerator.ascending10RandomEndInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -558,7 +558,7 @@ describe('Lexicographically Sort Subrange of an Array of all Equal Elements', ()
         const arr1 = ArrayGenerator.allEqualInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -580,7 +580,7 @@ describe('Lexicographically Sort Subrange of an Array with Many Duplicates', () 
         const arr1 = ArrayGenerator.manyDuplicateInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
@@ -602,7 +602,7 @@ describe('Lexicographically Sort Subrange of an Array with Some Duplicates', () 
         const arr1 = ArrayGenerator.someDuplicateInt(length)
         const arr2 = arr1.slice(lo, hi)
 
-        sort(arr1, lo, hi)
+        sort(arr1, alphabeticalCompare, lo, hi)
         arr2.sort()
 
         let j = 0
