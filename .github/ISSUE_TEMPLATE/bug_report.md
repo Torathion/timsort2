@@ -6,18 +6,13 @@ labels: ''
 assignees: ''
 ---
 
-- [] I have searched for [similar issues](https://github.com/torathion/typarr/issues)
+- [] I have searched for [similar issues](https://github.com/torathion/timsort2/issues)
 
 ---
 
 ## Steps to Reproduce
 
-### typarr version
-
-```js
-```
-
-### bugged function
+### timsort2 version
 
 ```js
 ```

@@ -1,6 +1,6 @@
-# Contributing to typarr
+# Contributing to timsort2
 
-Thank you for your interest in contributing to typarr! We welcome contributions from everyone, whether you're fixing bugs, improving documentation, or adding new features. This guide will help you get started.
+Thank you for your interest in contributing to timsort2! We welcome contributions from everyone, whether you're fixing bugs, improving documentation, or adding new features. This guide will help you get started.
 
 ---
 
@@ -28,8 +28,8 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 1. **Fork the Repository**: Click the "Fork" button on the top right of the repository page to create your own copy.
 2. **Clone the Repository**: Clone your forked repository to your local machine:
    ```bash
-   git clone https://github.com/your-username/typarr.git
-   cd typarr
+   git clone https://github.com/your-username/timsort2.git
+   cd timsort2
    ```
 
 ## Setting up the Project
@@ -38,7 +38,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ## Making Changes
 
-- Make sure edits are as short, precise and optimized as possible.
+- Make sure edits are as short, precise and as much optimized as possible.
 - No comfort functions like `array.forEach`, `array.map`, `array.reduce`
 - Do not add obfuscated or unreadable code into the project
 - Do not add any new dependencies into the project

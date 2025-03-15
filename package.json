@@ -27,13 +27,13 @@
     "util"
   ],
   "author": "Torathion",
-  "homepage": "https://github.com/Torathion/typarr",
+  "homepage": "https://github.com/Torathion/timsort2",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Torathion/typarr.git"
+    "url": "https://github.com/Torathion/timsort2.git"
   },
   "bugs": {
-    "url": "https://github.com/Torathion/typarr/issues"
+    "url": "https://github.com/Torathion/timsort2/issues"
   },
   "sideEffects": false,
   "type": "module",
