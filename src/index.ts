@@ -268,7 +268,7 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
    */
   lastOffset++
   while (lastOffset < offset) {
-    tmp = lastOffset + ((offset - lastOffset) >>> 1)
+    tmp = (lastOffset + offset) >> 1
     if (compare(value, array[start + tmp] as T) > 0) lastOffset = tmp + 1
     else offset = tmp
   }
@@ -334,7 +334,7 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
   lastOffset++
 
   while (lastOffset < offset) {
-    tmp = lastOffset + ((offset - lastOffset) >>> 1)
+    tmp = (lastOffset + offset) >> 1
     if (compare(value, array[start + tmp] as T) < 0) offset = tmp
     else lastOffset = tmp + 1
   }
