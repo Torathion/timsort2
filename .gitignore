@@ -16,6 +16,7 @@ coverage
 
 /cypress/videos/
 /cypress/screenshots/
+/benchmark/index.js
 
 # Editor directories and files
 .vscode/*

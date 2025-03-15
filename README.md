@@ -1,264 +1,178 @@
-# Node-TimSort: Fast Sorting for Node.js
+# timsort2: node-timsort reloaded
 
-[![Build Status](https://travis-ci.org/mziccard/node-timsort.svg?branch=master)](https://travis-ci.org/mziccard/node-timsort)
-[![npm version](https://badge.fury.io/js/timsort.svg)](https://www.npmjs.com/package/timsort)
+<p align="center">
+<h1 align="center">Sort up to 5 times faster! Now smaller and even faster!</h1>
+<p align="center">
+  <a href="https://www.npmjs.com/package/timsort2"><img src="https://img.shields.io/npm/v/timsort2?style=for-the-badge&logo=npm"/></a>
+  <a href="https://npmtrends.com/timsort2"><img src="https://img.shields.io/npm/dm/timsort2?style=for-the-badge"/></a>
+  <a href="https://bundlephobia.com/package/timsort2"><img src="https://img.shields.io/bundlephobia/minzip/timsort2?style=for-the-badge"/></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/Torathion/timsort2?style=for-the-badge"/></a>
+  <a href="https://codecov.io/gh/torathion/timsort2"><img src="https://codecov.io/gh/torathion/timsort2/branch/main/graph/badge.svg?style=for-the-badge" /></a>
+  <a href="https://github.com/torathion/timsort2/actions"><img src="https://img.shields.io/github/actions/workflow/status/torathion/timsort2/build.yml?style=for-the-badge&logo=esbuild"/></a>
+   <a href="https://github.com/prettier/prettier#readme"><img alt="code style" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge&logo=prettier"></a>
+</p>
+</p>
 
-An adaptive and **stable** sort algorithm based on merging that requires fewer than nlog(n) 
-comparisons when run on partially sorted arrays. The algorithm uses O(n) memory and still runs in O(nlogn) 
-(worst case) on random arrays.  
-This implementation is based on the original 
-[TimSort](http://svn.python.org/projects/python/trunk/Objects/listsort.txt) developed 
-by Tim Peters for Python's lists (code [here](http://svn.python.org/projects/python/trunk/Objects/listobject.c)).
-TimSort has been also adopted in Java starting from version 7.
+This is a fork of [timsort](https://www.npmjs.com/package/timsort) that has been last updated 9 years ago (24th July 2016). During this time, JavaScript developed tremendously, offering new ways to be faster and write less code, while also setting up new requirements for modern JS development. Timsort2 tries to add all of those new things into this package again, because timsort is [STILL FASTER](#benchmarks) than `array.sort`, even though `array.sort` got some performance improvements.
 
-## Acknowledgments
+Additionally, TimSort2 optimized the original code and now comes with:
 
-- @novacrazy: ported the module to ES6/ES7 and made it available via bower
-- @kasperisager: implemented faster lexicographic comparison of small integers
+- 33% reduced bundle size (5.2KB -> 3.9KB)
+- 5% - 50% faster sorting
+- Less overhead (less function calls / object creations / variables)
+- ESM and CJS build
+- TypeScript support
+- Better `array.sort` compatibility for easier migration
+
+Some words from the previous version:
+
+An adaptive and **stable** sort algorithm based on merging that requires fewer than `n * log(n)` comparisons when run on partially sorted arrays. The algorithm uses `O(n)` memory and still runs in `O(n * log(n))` (worst case) on random arrays. This implementation is based on the original [TimSort](http://svn.python.org/projects/python/trunk/Objects/listsort.txt) developed by Tim Peters for Python's lists (code [here](http://svn.python.org/projects/python/trunk/Objects/listobject.c)). TimSort has been also adopted in Java starting from version 7.
 
 ## Usage
 
-Install the package with npm:
+Install the package:
+
+```powershell
+pnpm i timsort
 ```
-npm install --save timsort
-```
+
 And use it:
-```javascript
-var TimSort = require('timsort');
 
-var arr = [...];
-TimSort.sort(arr);
-```
-You can also install it with bower:
-```
-bower install timsort
-```
-As `array.sort()` by default the `timsort` module sorts according to 
-lexicographical order. 
-You can also provide your own compare function (to sort any object) as:
-```javascript
-function numberCompare(a,b) {
-    return a-b;
-}
+```typescript
+import { alphabeticalCompare, sort, type Comparator } from 'timsort2'
 
+// 1. Simple
 var arr = [...];
-var TimSort = require('timsort');
-TimSort.sort(arr, numberCompare);
-```
-You can also sort only a specific subrange of the array:
-```javascript
-TimSort.sort(arr, 5, 10);
-TimSort.sort(arr, numberCompare, 5, 10);
+// Returns the sorted array, just like `array.sort`
+arr = sort(arr);
+
+// 2. Sorting only a specific part
+// Only sorts the indices 0 - 5.
+// BREAKING: For better performance and less parameter handling inside timsort2, you HAVE to include a comparator when sorting a sub range.
+arr = sort(arr, alphabeticalCompare, 0, 5)
+
+// 3. With custom comparator
+
+const numberCompare: Comparator<number> = (a: number, b: number) => number
+arr = sort(arr, numberCompare)
 ```
 
 ## Performance
 
-A benchmark is provided in `benchmark/index.js`. It compares the `timsort` module against 
-the default `array.sort` method in the numerical sorting of different types of integer array 
+A benchmark is provided in `benchmark/index.ts`. It compares the `timsort` module against
+the default `array.sort` method and the old `timsort` package in the numerical sorting of different types of integer array
 (as described [here](http://svn.python.org/projects/python/trunk/Objects/listsort.txt)):
 
--  *Random array*
--  *Descending array*
--  *Ascending array*
--  *Ascending array with 3 random exchanges*
--  *Ascending array with 10 random numbers in the end*
--  *Array of equal elements*
--  *Random Array with many duplicates*
--  *Random Array with some duplicates*
+- *Random array*
+- *Descending array*
+- *Ascending array*
+- *Ascending array with 3 random exchanges*
+- *Ascending array with 10 random numbers in the end*
+- *Array of equal elements*
+- *Random Array with many duplicates*
+- *Random Array with some duplicates*
 
-For any of the array types the sorting is repeated several times and for 
-different array sizes, average execution time is then printed. 
-I run the benchmark on Node v6.3.1 (both pre-compiled and compiled from source,
-results are very similar), obtaining the following values:
-
-<table>
-  <tr>
-    <th></th><th></th>
-    <th colspan="2">Execution Time (ns)</th>
-    <th rowspan="2">Speedup</th>
-  </tr>
-  <tr>
-    <th>Array Type</th>
-    <th>Length</th>
-    <th>TimSort.sort</th>
-    <th>array.sort</th>
-  </tr>
-<tbody>
- <tr>
-  <td rowspan="4">Random</td><td>10</td><td>404</td><td>1583</td><td>3.91</td>
- </tr>
- <tr>
-  <td>100</td><td>7147</td><td>4442</td><td>0.62</td>
- </tr>
- <tr>
-  <td>1000</td><td>96395</td><td>59979</td><td>0.62</td>
- </tr>
- <tr>
-  <td>10000</td><td>1341044</td><td>6098065</td><td>4.55</td>
- </tr>
- <tr>
-  <td rowspan="4">Descending</td><td>10</td><td>180</td><td>1881</td><td>10.41</td>
- </tr>
- <tr>
-  <td>100</td><td>682</td><td>19210</td><td>28.14</td>
-</tr>
- <tr>
-  <td>1000</td><td>3809</td><td>185185</td><td>48.61</td>
- </tr>
- <tr>
-  <td>10000</td><td>35878</td><td>5392428</td><td>150.30</td>
- </tr>
- <tr>
-  <td rowspan="4">Ascending</td><td>10</td><td>173</td><td>816</td><td>4.69</td>
- </tr>
- <tr>
-  <td>100</td><td>578</td><td>18147</td><td>31.34</td>
- </tr>
- <tr>
-  <td>1000</td><td>2551</td><td>331993</td><td>130.12</td>
- </tr>
- <tr>
-  <td>10000</td><td>22098</td><td>5382446</td><td>243.57</td>
- </tr>
- <tr>
-  <td rowspan="4">Ascending + 3 Rand Exc</td><td>10</td><td>232</td><td>927</td><td>3.99</td>
- </tr>
- <tr>
-  <td>100</td><td>1059</td><td>15792</td><td>14.90</td>
- </tr>
- <tr>
-  <td>1000</td><td>3525</td><td>300708</td><td>85.29</td>
- </tr>
- <tr>
-  <td>10000</td><td>27455</td><td>4781370</td><td>174.15</td>
- </tr>
- <tr>
-  <td rowspan="4">Ascending + 10 Rand End</td><td>10</td><td>378</td><td>1425</td><td>3.77</td>
- </tr>
- <tr>
-  <td>100</td><td>1707</td><td>23346</td><td>13.67</td>
- </tr>
- <tr>
-  <td>1000</td><td>5818</td><td>334744</td><td>57.53</td>
- </tr>
- <tr>
-  <td>10000</td><td>38034</td><td>4985473</td><td>131.08</td>
- </tr>
- <tr>
-  <td rowspan="4">Equal Elements</td><td>10</td><td>164</td><td>766</td><td>4.68</td>
- </tr>
- <tr>
-  <td>100</td><td>520</td><td>3188</td><td>6.12</td>
- </tr>
- <tr>
-  <td>1000</td><td>2340</td><td>27971</td><td>11.95</td>
- </tr>
- <tr>
-  <td>10000</td><td>17011</td><td>281672</td><td>16.56</td>
- </tr>
- <tr>
-  <td rowspan="4">Many Repetitions</td><td>10</td><td>396</td><td>1482</td><td>3.74</td>
- </tr>
- <tr>
-  <td>100</td><td>7282</td><td>25267</td><td>3.47</td>
- </tr>
- <tr>
-  <td>1000</td><td>105528</td><td>420120</td><td>3.98</td>
- </tr>
- <tr>
-  <td>10000</td><td>1396120</td><td>5787399</td><td>4.15</td>
- </tr>
- <tr>
-  <td rowspan="4">Some Repetitions</td><td>10</td><td>390</td><td>1463</td><td>3.75</td>
- </tr>
- <tr>
-  <td>100</td><td>6678</td><td>20082</td><td>3.01</td>
- </tr>
- <tr>
-  <td>1000</td><td>104344</td><td>374103</td><td>3.59</td>
- </tr>
- <tr>
-  <td>10000</td><td>1333816</td><td>5474000</td><td>4.10</td>
- </tr>
-</tbody>
-</table>
+For any of the array types the sorting is repeated several times and for
+different array sizes, average execution time is then printed.
+I run the benchmark on Node v22.13.0, obtaining the following values:
 
 `TimSort.sort` **is faster** than `array.sort` on almost of the tested array types.
-In general, the more ordered the array is the better `TimSort.sort` performs with respect to `array.sort` (up to 243 times faster on already sorted arrays).
+In general, the more ordered the array is the better `TimSort.sort` performs with respect to `array.sort` (up to 8 times faster on already sorted arrays).
 And also, in general, the bigger the array the more we benefit from using
-the `timsort` module.  
+the `timsort` module.
+
+Additionally, `timsort2` is around 5% to 50% faster. Due to the primitive nature of the benchmarks, it seems like the package is slower. This is due to GC calls and premature optimizations from NodeJS that block the tests, receiving varying results. I can assure you that the algorithm is still identical and `timsort2` only adds micro optimizations to reduce the number of function calls, variables and object creations for less GC work.
 
 These data strongly depend on Node.js version and the machine on which the benchmark is run. I strongly encourage you to run the benchmark on your own setup with:
+
+```powershell
+npm run bench
 ```
-npm run benchmark
+
+If you want to adjust the benchmarks, rebuild them with:
+
+```powershell
+npm run build
 ```
+
+### Benchmarks
+
+```powershell
+┌──────────────────────────────┬────────────────────┬──────────┬───────────────┬────────────────────┬─────────────────┬─────────────┐
+│ ArrayType                    │ Length             │ Time de… │ Time old      │ Time new           │ Speedup default │ Speedup old │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ randomInt                    │ 10                 │ 676      │ 320           │ 320                │ 2.11            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ randomInt                    │ 100                │ 11209    │ 5712          │ 6019               │ 1.86            │ 0.95        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ randomInt                    │ 1000               │ 165493   │ 91890         │ 91565              │ 1.81            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ randomInt                    │ 10000              │ 2293254  │ 1250329       │ 1268879            │ 1.81            │ 0.99        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ descendingInt                │ 10                 │ 350      │ 317           │ 291                │ 1.20            │ 1.09        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ descendingInt                │ 100                │ 1537     │ 816           │ 790                │ 1.94            │ 1.03        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ descendingInt                │ 1000               │ 15535    │ 4024          │ 4522               │ 3.43            │ 0.89        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ descendingInt                │ 10000              │ 135298   │ 28513         │ 28771              │ 4.70            │ 0.99        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascendingInt                 │ 10                 │ 328      │ 219           │ 207                │ 1.58            │ 1.06        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascendingInt                 │ 100                │ 1430     │ 425           │ 483                │ 2.96            │ 0.88        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascendingInt                 │ 1000               │ 12546    │ 1938          │ 2375               │ 5.28            │ 0.82        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascendingInt                 │ 10000              │ 124829   │ 26932         │ 17062              │ 7.32            │ 1.58        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending3RandomExchangesInt │ 10                 │ 458      │ 298           │ 274                │ 1.67            │ 1.09        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending3RandomExchangesInt │ 100                │ 3060     │ 1039          │ 991                │ 3.09            │ 1.05        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending3RandomExchangesInt │ 1000               │ 14369    │ 4116          │ 2988               │ 4.81            │ 1.38        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending3RandomExchangesInt │ 10000              │ 137179   │ 39406         │ 25568              │ 5.37            │ 1.54        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending10RandomEndInt      │ 10                 │ 640      │ 416           │ 403                │ 1.59            │ 1.03        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending10RandomEndInt      │ 100                │ 2786     │ 1408          │ 1356               │ 2.05            │ 1.04        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending10RandomEndInt      │ 1000               │ 15530    │ 4815          │ 4115               │ 3.77            │ 1.17        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ ascending10RandomEndInt      │ 10000              │ 134392   │ 26214         │ 26122              │ 5.14            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ allEqualInt                  │ 10                 │ 320      │ 214           │ 198                │ 1.62            │ 1.08        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ allEqualInt                  │ 100                │ 1425     │ 427           │ 403                │ 3.54            │ 1.06        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ allEqualInt                  │ 1000               │ 12464    │ 1849          │ 2135               │ 5.84            │ 0.87        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ allEqualInt                  │ 10000              │ 122069   │ 15485         │ 15558              │ 7.85            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ manyDuplicateInt             │ 10                 │ 607      │ 398           │ 386                │ 1.57            │ 1.03        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ manyDuplicateInt             │ 100                │ 9886     │ 6049          │ 5996               │ 1.65            │ 1.01        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ manyDuplicateInt             │ 1000               │ 142210   │ 91279         │ 91106              │ 1.56            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ manyDuplicateInt             │ 10000              │ 1896399  │ 1267961       │ 1263132            │ 1.50            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ someDuplicateInt             │ 10                 │ 612      │ 413           │ 401                │ 1.52            │ 1.03        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ someDuplicateInt             │ 100                │ 9901     │ 6069          │ 6010               │ 1.65            │ 1.01        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ someDuplicateInt             │ 1000               │ 142366   │ 91415         │ 91298              │ 1.56            │ 1.00        │
+├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
+│ someDuplicateInt             │ 10000              │ 1856135  │ 1242881       │ 1242006            │ 1.49            │ 1.00        │
+└──────────────────────────────┴────────────────────┴──────────┴───────────────┴────────────────────┴─────────────────┴─────────────┘
+```
+
 Please also notice that:
 
--  This benchmark is far from exhaustive. Several cases are not considered 
-and the results must be taken as partial
+-  This benchmark is far from exhaustive. Several cases are not considered and the results must be taken as partial
 -  *inlining* is surely playing an active role in `timsort` module's good performance
--  A more accurate comparison of the algorithms would require implementing `array.sort` in pure javascript
-and counting element comparisons
+-  A more accurate comparison of the algorithms would require implementing `array.sort` in pure javascript and counting element comparisons. `array.sort` in fact calls an underlying C++ function from V8 directly.
 
 ## Stability
 
-TimSort is *stable* which means that equal items maintain their relative order 
-after sorting. Stability is a desirable property for a sorting algorithm. 
-Consider the following array of items with an height and a weight.
-```javascript
-[ 
-  { height: 100, weight: 80 },
-  { height: 90, weight: 90 },
-  { height: 70, weight: 95 },
-  { height: 100, weight: 100 },
-  { height: 80, weight: 110 },
-  { height: 110, weight: 115 },
-  { height: 100, weight: 120 },
-  { height: 70, weight: 125 },
-  { height: 70, weight: 130 },
-  { height: 100, weight: 135 },
-  { height: 75, weight: 140 },
-  { height: 70, weight: 140 } 
-]
-```
-Items are already sorted by `weight`. Sorting the array 
-according to the item's `height` with the `timsort` module 
-results in the following array:
-```javascript
-[ 
-  { height: 70, weight: 95 },
-  { height: 70, weight: 125 },
-  { height: 70, weight: 130 },
-  { height: 70, weight: 140 },
-  { height: 75, weight: 140 },
-  { height: 80, weight: 110 },
-  { height: 90, weight: 90 },
-  { height: 100, weight: 80 },
-  { height: 100, weight: 100 },
-  { height: 100, weight: 120 },
-  { height: 100, weight: 135 },
-  { height: 110, weight: 115 } 
-]
-```
-Items with the same  `height` are still sorted by `weight` which means they preserved their relative order.
-
-`array.sort`, instead, is not guarranteed to be *stable*. In Node v0.12.7 
-sorting the previous array by `height` with `array.sort` results in:
-```javascript
-[ 
-  { height: 70, weight: 140 },
-  { height: 70, weight: 95 },
-  { height: 70, weight: 125 },
-  { height: 70, weight: 130 },
-  { height: 75, weight: 140 },
-  { height: 80, weight: 110 },
-  { height: 90, weight: 90 },
-  { height: 100, weight: 100 },
-  { height: 100, weight: 80 },
-  { height: 100, weight: 135 },
-  { height: 100, weight: 120 },
-  { height: 110, weight: 115 } 
-]
-```
-As you can see the sorting did not preserve `weight` ordering for items with the 
-same `height`.
+With `array.sort` now being stable, most other sorting algorithms are now either deprecated or slower than `array.sort`. In fact, `timsort2` sacrifices stability for better performance. While `array.sort` supporting array sizes up to `1^63` and beyond, `timsort2` only supports array sizes up to `1^31` before causing overflow errors. This is due to the nature of bitwise operators. Those behave differently from other languages as numbers are always interpreted as int32. JavaScript does support bigger numbers, but has to cast them into those data types, internally, it still works with 32bit integers or 64bit floats. And bitwise operators only work with int32 numbers.
