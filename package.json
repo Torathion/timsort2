@@ -38,6 +38,9 @@
   "sideEffects": false,
   "type": "module",
   "license": "MIT",
+  "dependencies": {
+    "typestar": "^1.8.0"
+  },
   "devDependencies": {
     "@rollup/rollup-win32-ia32-msvc": "^4.35.0",
     "@types/node": "^22.13.10",
@@ -48,7 +51,6 @@
     "eslint-config-shiny": "^4.1.0",
     "timsort": "^0.3.0",
     "typescript": "^5.8.2",
-    "typestar": "^1.8.0",
     "vitest": "^3.0.8"
   }
 }
