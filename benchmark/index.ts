@@ -122,7 +122,6 @@ class BenchmarkRunner {
       const startTimsortNano = startTimsort[0] * 1_000_000_000 + startTimsort[1]
       const stopTimsortNano = stopTimsort[0] * 1_000_000_000 + stopTimsort[1]
       timsortTime += stopTimsortNano - startTimsortNano
-
     }
 
     return {

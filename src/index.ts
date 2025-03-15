@@ -33,14 +33,14 @@ class TimSort<T> {
   constructor(array: AnyArray<T>, len: number, compare: Comparator<T>) {
     this.array = array
     this.compare = compare
-    this.tmp = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >>> 1 : DEFAULT_TMP_STORAGE_LENGTH)
+    this.tmp = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >> 1 : DEFAULT_TMP_STORAGE_LENGTH)
   }
 
   /**
    * Merge the runs on the stack at positions i and i+1. Must be always be called
    * with i=stackSize-2 or i=stackSize-3 (that is, we merge on top of the stack).
    *
-   * @param {number} i - Index of the run to merge in TimSort's stack.
+   * @param i - Index of the run to merge in TimSort's stack.
    */
   mergeAt(i: number, stackSize: number, runLength: number[], runStart: number[]) {
     const compare = this.compare
@@ -95,10 +95,10 @@ class TimSort<T> {
    * TimSort temporary array to store run2. Use mergeLow if run1.length <=
    * run2.length.
    *
-   * @param {number} start1 - First element in run1.
-   * @param {number} length1 - Length of run1.
-   * @param {number} start2 - First element in run2.
-   * @param {number} length2 - Length of run2.
+   * @param start1 - First element in run1.
+   * @param length1 - Length of run1.
+   * @param start2 - First element in run2.
+   * @param length2 - Length of run2.
    */
   mergeHigh(start1: number, length1: number, start2: number, length2: number): void {
     const compare = this.compare
@@ -272,10 +272,10 @@ class TimSort<T> {
    * TimSort temporary array to store run1. Use mergeHigh if run1.length >
    * run2.length.
    *
-   * @param {number} start1 - First element in run1.
-   * @param {number} length1 - Length of run1.
-   * @param {number} start2 - First element in run2.
-   * @param {number} length2 - Length of run2.
+   * @param start1 - First element in run1.
+   * @param length1 - Length of run1.
+   * @param start2 - First element in run2.
+   * @param length2 - Length of run2.
    */
   mergeLow(start1: number, length1: number, start2: number, length2: number) {
     const compare = this.compare
@@ -416,12 +416,10 @@ class TimSort<T> {
 /**
  * Sort an array in the range [lo, hi) using TimSort.
  *
- * @param {array} array - The array to sort.
- * @param {function=} compare - Item comparison function. Default is
- *     alphabetical
- * @param {number} lo - First element in the range (inclusive).
- * @param {number} hi - Last element in the range.
- *     comparator.
+ * @param array - The array to sort.
+ * @param compare - Item comparison function. Default is `alphabeticalCompare`
+ * @param lo - First element in the range (inclusive).
+ * @param hi - Last element in the range.
  */
 export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
   let remaining = hi - lo
@@ -440,7 +438,7 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
   }
 
   const len = array.length
-  const ts = new TimSort(array, len, compare!)
+  const ts = new TimSort(array, len, compare)
 
   let stackSize = 0
   const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
@@ -498,9 +496,9 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
 /**
  * Default alphabetical comparison of items.
  *
- * @param {string|object|number} a - First element to compare.
- * @param {string|object|number} b - Second element to compare.
- * @return {number} - A positive number if a.toString() > b.toString(), a
+ * @param a - First element to compare.
+ * @param b - Second element to compare.
+ * @return - A positive number if a.toString() > b.toString(), a
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
 export function alphabeticalCompare(a: any, b: any): number {
@@ -509,19 +507,12 @@ export function alphabeticalCompare(a: any, b: any): number {
   }
 
   if (~~a === a && ~~b === b) {
-    if (a === 0 || b === 0) {
-      return a - b
-    }
+    if (a === 0 || b === 0) return a - b
+
 
     if (a < 0 || b < 0) {
-      if (b >= 0) {
-        return -1
-      }
-
-      if (a >= 0) {
-        return 1
-      }
-
+      if (b >= 0) return -1
+      if (a >= 0) return 1
       a = -a
       b = -b
     }
@@ -547,10 +538,7 @@ export function alphabeticalCompare(a: any, b: any): number {
   const aStr = `${a}`
   const bStr = `${b}`
 
-  if (aStr === bStr) {
-    return 0
-  }
-
+  if (aStr === bStr) return 0
   return aStr < bStr ? -1 : 1
 }
 
@@ -558,18 +546,15 @@ export function alphabeticalCompare(a: any, b: any): number {
  * Perform the binary sort of the array in the range [lo, hi) where start is
  * the first element possibly out of order.
  *
- * @param {array} array - The array to sort.
- * @param {number} lo - First element in the range (inclusive).
- * @param {number} hi - Last element in the range.
- * @param {number} start - First element possibly out of order.
- * @param {function} compare - Item comparison function.
+ * @param array - The array to sort.
+ * @param lo - First element in the range (inclusive).
+ * @param hi - Last element in the range.
+ * @param start - First element possibly out of order.
+ * @param compare - Item comparison function.
  */
 function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, start: number, compare: Comparator<T>): void {
-  if (start === lo) {
-    start++
-  }
-
-  let mid
+  if (start === lo) start++
+  let tmp
   for (; start < hi; start++) {
     const pivot = array[start]
 
@@ -582,9 +567,10 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
      *   pivot <  array[i] for i in  in [right, start)
      */
     while (left < right) {
-      mid = (left + right) >>> 1
-      if (compare(pivot as T, array[mid] as T) < 0) right = mid
-      else left = mid + 1
+      // tmp acts as the mid point
+      tmp = (left + right) >> 1
+      if (compare(pivot as T, array[tmp] as T) < 0) right = tmp
+      else left = tmp + 1
     }
 
     /*
@@ -592,9 +578,9 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
      * equal to pivot, left points to the first slot after them: this is also
      * a reason for which TimSort is stable
      */
-    let n = start - left
+    tmp = start - left
     // Switch is just an optimization for small arrays
-    switch (n) {
+    switch (tmp) {
       case 3:
         array[left + 3] = array[left + 2]
       /* falls through */
@@ -605,9 +591,9 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
         array[left + 1] = array[left]
         break
       default:
-        while (n > 0) {
-          array[left + n] = array[left + n - 1]
-          n--
+        while (tmp > 0) {
+          array[left + tmp] = array[left + tmp - 1]
+          tmp--
         }
     }
 
@@ -620,13 +606,13 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
  * contains elements equal to the value the leftmost element index is returned
  * (for stability).
  *
- * @param {number} value - Value to insert.
- * @param {array} array - The array in which to insert value.
- * @param {number} start - First element in the range.
- * @param {number} length - Length of the range.
- * @param {number} hint - The index at which to begin the search.
- * @param {function} compare - Item comparison function.
- * @return {number} - The index where to insert value.
+ * @param value - Value to insert.
+ * @param array - The array in which to insert value.
+ * @param start - First element in the range.
+ * @param length - Length of the range.
+ * @param hint - The index at which to begin the search.
+ * @param compare - Item comparison function.
+ * @return - The index where to insert value.
  */
 function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
   const startHint = start + hint
@@ -641,7 +627,6 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
     while (offset < maxOffset && compare(value, array[startHint + offset] as T) > 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-      if (offset <= 0) offset = maxOffset
     }
 
     if (offset > maxOffset) offset = maxOffset
@@ -656,7 +641,6 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
     while (offset < maxOffset && compare(value, array[startHint - offset] as T) <= 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-      if (offset <= 0) offset = maxOffset
     }
     if (offset > maxOffset) offset = maxOffset
 
@@ -686,13 +670,13 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
  * contains elements equal to the value the rightmost element index is returned
  * (for stability).
  *
- * @param {number} value - Value to insert.
- * @param {array} array - The array in which to insert value.
- * @param {number} start - First element in the range.
- * @param {number} length - Length of the range.
- * @param {number} hint - The index at which to begin the search.
- * @param {function} compare - Item comparison function.
- * @return {number} - The index where to insert value.
+ * @param value - Value to insert.
+ * @param array - The array in which to insert value.
+ * @param start - First element in the range.
+ * @param length - Length of the range.
+ * @param hint - The index at which to begin the search.
+ * @param compare - Item comparison function.
+ * @return - The index where to insert value.
  */
 function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
   const startHint = start + hint
@@ -707,7 +691,6 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
     while (offset < maxOffset && compare(value, array[startHint - offset] as T) < 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-      if (offset <= 0) offset = maxOffset
     }
 
     if (offset > maxOffset) offset = maxOffset
@@ -724,7 +707,6 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
     while (offset < maxOffset && compare(value, array[startHint + offset] as T) >= 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-      if (offset <= 0) offset = maxOffset
     }
     if (offset > maxOffset) offset = maxOffset
 
@@ -755,11 +737,11 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
  * descending sequence (run) starting at array[lo] in the range [lo, hi). If
  * the run is descending it is made ascending.
  *
- * @param {array} array - The array to reverse.
- * @param {number} lo - First element in the range (inclusive).
- * @param {number} hi - Last element in the range.
- * @param {function} compare - Item comparison function.
- * @return {number} - The length of the run.
+ * @param array - The array to reverse.
+ * @param lo - First element in the range (inclusive).
+ * @param hi - Last element in the range.
+ * @param compare - Item comparison function.
+ * @return - The length of the run.
  */
 function makeAscendingRun<T>(array: AnyArray<T>, lo: number, hi: number, compare: Comparator<T>): number {
   let runHi = lo + 1
