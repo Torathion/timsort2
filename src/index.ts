@@ -58,13 +58,11 @@ class TimSort<T> {
       runLength[i + 1] = runLength[i + 2]
     }
 
-    stackSize--
-
     /*
      * Find where the first element in the second run goes in run1. Previous
      * elements in run1 are already in place
      */
-    const k = gallopRight(array[start2], array, start1, length1, 0, compare)
+    const k = gallopRight(array[start2] as T, array, start1, length1, 0, compare)
     start1 += k
     length1 -= k
 
@@ -171,10 +169,7 @@ class TimSort<T> {
         }
       } while ((count1 | count2) < minGallop)
 
-      if (exit) {
-        break
-      }
-
+      if (exit) break
       do {
         count1 = length1 - gallopRight(tmp[cursor2], array, start1, length1, length1 - 1, compare)
 
@@ -346,7 +341,7 @@ class TimSort<T> {
       }
 
       do {
-        count1 = gallopRight(array[cursor2], tmp, cursor1, length1, 0, compare)
+        count1 = gallopRight(array[cursor2] as T, tmp, cursor1, length1, 0, compare)
 
         if (count1 !== 0) {
           for (i = 0; i < count1; i++) {
@@ -395,22 +390,13 @@ class TimSort<T> {
         minGallop--
       } while (count1 >= DEFAULT_MIN_GALLOPING || count2 >= DEFAULT_MIN_GALLOPING)
 
-      if (exit) {
-        break
-      }
-
-      if (minGallop < 0) {
-        minGallop = 0
-      }
-
+      if (exit) break
+      if (minGallop < 0) minGallop = 0
       minGallop += 2
     }
 
     this.minGallop = minGallop
-
-    if (minGallop < 1) {
-      this.minGallop = 1
-    }
+    if (minGallop < 1) this.minGallop = 1
 
     if (length1 === 1) {
       for (i = 0; i < length2; i++) {
@@ -460,8 +446,8 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   let runLength = 0
   // On small arrays binary sort can be used directly
   if (remaining < DEFAULT_MIN_MERGE) {
-    runLength = makeAscendingRun(array, lo, hi, compare)
-    binaryInsertionSort(array, lo, hi, lo + runLength, compare)
+    runLength = makeAscendingRun(array, lo, hi, compare!)
+    binaryInsertionSort(array, lo, hi, lo + runLength, compare!)
     return array
   }
 
@@ -472,17 +458,25 @@ export default function sort<T>(array: AnyArray<T>, compare?: (a: T, b: T) => nu
   const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
   const runStart = new Array(stackLength)
   const runLenArr = new Array(stackLength)
-  const minRun = minRunLength(remaining)
 
+  // Calculate the minimum run length for the sort
+  let x = 0
+  let y = remaining
+  while (y >= DEFAULT_MIN_MERGE) {
+    x |= y & 1
+    y >>= 1
+  }
+  const minRun = x + y
+  // Do runs
   do {
-    runLength = makeAscendingRun(array, lo, hi, compare)
+    runLength = makeAscendingRun(array, lo, hi, compare!)
     if (runLength < minRun) {
       let force = remaining
       if (force > minRun) {
         force = minRun
       }
 
-      binaryInsertionSort(array, lo, lo + force, lo + runLength, compare)
+      binaryInsertionSort(array, lo, lo + force, lo + runLength, compare!)
       runLength = force
     }
     // Push new run and merge if necessary
@@ -582,11 +576,12 @@ function alphabeticalCompare(a: number, b: number): number {
  * @param {number} start - First element possibly out of order.
  * @param {function} compare - Item comparison function.
  */
-function binaryInsertionSort(array, lo, hi, start, compare) {
+function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, start: number, compare: Comparator<T>): void {
   if (start === lo) {
     start++
   }
 
+  let mid
   for (; start < hi; start++) {
     const pivot = array[start]
 
@@ -599,13 +594,9 @@ function binaryInsertionSort(array, lo, hi, start, compare) {
      *   pivot <  array[i] for i in  in [right, start)
      */
     while (left < right) {
-      const mid = (left + right) >>> 1
-
-      if (compare(pivot, array[mid]) < 0) {
-        right = mid
-      } else {
-        left = mid + 1
-      }
+      mid = (left + right) >>> 1
+      if (compare(pivot as T, array[mid] as T) < 0) right = mid
+      else left = mid + 1
     }
 
     /*
@@ -716,28 +707,25 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
  * @return {number} - The index where to insert value.
  */
 function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
+  const startHint = start + hint
   let lastOffset = 0
   let maxOffset = 0
   let offset = 1
+  let tmp
 
-  if (compare(value, array[start + hint] as T) < 0) {
+  if (compare(value, array[startHint] as T) < 0) {
     maxOffset = hint + 1
 
-    while (offset < maxOffset && compare(value, array[start + hint - offset] as T) < 0) {
+    while (offset < maxOffset && compare(value, array[startHint - offset] as T) < 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-
-      if (offset <= 0) {
-        offset = maxOffset
-      }
+      if (offset <= 0) offset = maxOffset
     }
 
-    if (offset > maxOffset) {
-      offset = maxOffset
-    }
+    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
-    const tmp = lastOffset
+    tmp = lastOffset
     lastOffset = hint - offset
     offset = hint - tmp
 
@@ -745,18 +733,12 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
   } else {
     maxOffset = length - hint
 
-    while (offset < maxOffset && compare(value, array[start + hint + offset] as T) >= 0) {
+    while (offset < maxOffset && compare(value, array[startHint + offset] as T) >= 0) {
       lastOffset = offset
       offset = (offset << 1) + 1
-
-      if (offset <= 0) {
-        offset = maxOffset
-      }
+      if (offset <= 0) offset = maxOffset
     }
-
-    if (offset > maxOffset) {
-      offset = maxOffset
-    }
+    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     lastOffset += hint
@@ -772,13 +754,9 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
   lastOffset++
 
   while (lastOffset < offset) {
-    const m = lastOffset + ((offset - lastOffset) >>> 1)
-
-    if (compare(value, array[start + m] as T) < 0) {
-      offset = m
-    } else {
-      lastOffset = m + 1
-    }
+    tmp = lastOffset + ((offset - lastOffset) >>> 1)
+    if (compare(value, array[start + tmp] as T) < 0) offset = tmp
+    else lastOffset = tmp + 1
   }
 
   return offset
@@ -795,16 +773,13 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
  * @param {function} compare - Item comparison function.
  * @return {number} - The length of the run.
  */
-function makeAscendingRun(array, lo, hi, compare) {
+function makeAscendingRun<T>(array: AnyArray<T>, lo: number, hi: number, compare: Comparator<T>): number {
   let runHi = lo + 1
-
-  if (runHi === hi) {
-    return 1
-  }
+  if (runHi === hi) return 1
 
   // Descending
-  if (compare(array[runHi++], array[lo]) < 0) {
-    while (runHi < hi && compare(array[runHi], array[runHi - 1]) < 0) {
+  if (compare(array[runHi++] as T, array[lo] as T) < 0) {
+    while (runHi < hi && compare(array[runHi] as T, array[runHi - 1] as T) < 0) {
       runHi++
     }
 
@@ -818,26 +793,10 @@ function makeAscendingRun(array, lo, hi, compare) {
     runHi++
     // Ascending
   } else {
-    while (runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0) {
+    while (runHi < hi && compare(array[runHi] as T, array[runHi - 1] as T) >= 0) {
       runHi++
     }
   }
 
   return runHi - lo
-}
-
-/**
- * Compute minimum run length for TimSort
- *
- * @param {number} n - The size of the array to sort.
- */
-function minRunLength(remaining: number) {
-  let r = 0
-
-  while (remaining >= DEFAULT_MIN_MERGE) {
-    r |= remaining & 1
-    remaining >>= 1
-  }
-
-  return remaining + r
 }

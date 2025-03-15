@@ -24,7 +24,7 @@ export default defineConfig({
         '**/*.mjs',
         '**/*.d.ts',
         '**/types/',
-        '**/index.ts',
+        '**/benchmark/**',
         '**/constants.ts',
         '**/*.config.ts',
         '**/*.config.js',

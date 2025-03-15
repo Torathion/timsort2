@@ -105,6 +105,15 @@ class BenchmarkRunner {
       const stopDefaultNano = stopDefault[0] * 1_000_000_000 + stopDefault[1]
       defaultTime += stopDefaultNano - startDefaultNano
 
+      // Benchmark Revival (Old TimSort)
+      const startOldTimsort = process.hrtime()
+      Timsort(arr3, numberCompare)
+      const stopOldTimsort = process.hrtime()
+
+      const startOldTimsortNano = startOldTimsort[0] * 1_000_000_000 + startOldTimsort[1]
+      const stopOldTimsortNano = stopOldTimsort[0] * 1_000_000_000 + stopOldTimsort[1]
+      oldTimsortTime += stopOldTimsortNano - startOldTimsortNano
+
       // Benchmark TimSort
       const startTimsort = process.hrtime()
       timsort(arr2, numberCompare)
@@ -114,14 +123,6 @@ class BenchmarkRunner {
       const stopTimsortNano = stopTimsort[0] * 1_000_000_000 + stopTimsort[1]
       timsortTime += stopTimsortNano - startTimsortNano
 
-      // Benchmark Revival (Old TimSort)
-      const startOldTimsort = process.hrtime()
-      Timsort(arr3, numberCompare)
-      const stopOldTimsort = process.hrtime()
-
-      const startOldTimsortNano = startOldTimsort[0] * 1_000_000_000 + startOldTimsort[1]
-      const stopOldTimsortNano = stopOldTimsort[0] * 1_000_000_000 + stopOldTimsort[1]
-      oldTimsortTime += stopOldTimsortNano - startOldTimsortNano
     }
 
     return {
@@ -129,19 +130,6 @@ class BenchmarkRunner {
       timsortTime: timsortTime / repetitions,
       oldTimsortTime: oldTimsortTime / repetitions
     }
-  }
-
-  // Getters for results
-  public getDefaultResults(): Record<string, Record<number, number>> {
-    return this.defaultResults
-  }
-
-  public getTimsortResults(): Record<string, Record<number, number>> {
-    return this.timsortResults
-  }
-
-  public getOldTimsortResults(): Record<string, Record<number, number>> {
-    return this.oldTimsortResults
   }
 }
 
