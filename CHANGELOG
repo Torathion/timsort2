@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.0.3] 03-15-2025
+
+- Move typestar to dependencies [#2](https://github.com/Torathion/timsort2/pull/2) by @SukkaW
+
 ## [1.0.2] 03-15-2025
 
 - Fix types not being found.
