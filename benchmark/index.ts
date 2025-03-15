@@ -107,7 +107,7 @@ class BenchmarkRunner {
 
       // Benchmark Revival (Old TimSort)
       const startOldTimsort = process.hrtime()
-      Timsort(arr3, numberCompare)
+      Timsort.sort(arr3, numberCompare)
       const stopOldTimsort = process.hrtime()
 
       const startOldTimsortNano = startOldTimsort[0] * 1_000_000_000 + startOldTimsort[1]
@@ -116,7 +116,7 @@ class BenchmarkRunner {
 
       // Benchmark TimSort
       const startTimsort = process.hrtime()
-      timsort(arr2, numberCompare)
+      sort(arr2, numberCompare)
       const stopTimsort = process.hrtime()
 
       const startTimsortNano = startTimsort[0] * 1_000_000_000 + startTimsort[1]
