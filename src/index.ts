@@ -79,7 +79,7 @@ export function alphabeticalCompare(a: any, b: any): number {
  * @param lo - First element in the range (inclusive).
  * @param hi - Last element in the range.
  */
-export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
+export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
   let remaining = hi - lo
 
   // The array is already sorted

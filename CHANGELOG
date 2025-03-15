@@ -1,0 +1,5 @@
+# CHANGELOG
+
+## [1.0.1] 03-15-2025
+
+- Fix error of `sort` function not found.

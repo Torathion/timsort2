@@ -1,6 +1,6 @@
 import Table from 'cli-table3'
 import ArrayGenerator from '../test/ArrayGenerator'
-import timsort from '../src'
+import { sort } from '../src'
 import Timsort from 'timsort'
 
 // Define the comparison function for sorting
