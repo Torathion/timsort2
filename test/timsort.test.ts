@@ -1,7 +1,7 @@
 'use strict'
 
 import { describe, it, expect } from 'vitest'
-import sort, { alphabeticalCompare } from '../src'
+import { sort, alphabeticalCompare } from '../src'
 import ArrayGenerator from './ArrayGenerator'
 
 let lengths = [10, 100, 1000, 10000]
