@@ -33,10 +33,7 @@ type Comparator<T> = (a: T, b: T) => number
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
 export function alphabeticalCompare(a: any, b: any): number {
-  if (a === b) {
-    return 0
-  }
-
+  if (a === b) return 0
   if (~~a === a && ~~b === b) {
     if (a === 0 || b === 0) return a - b
 
@@ -103,10 +100,7 @@ export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabetica
   // Calculate the minimum run length for the sort
   let x = 0
   let y = remaining
-  while (y >= DEFAULT_MIN_MERGE) {
-    x |= y & 1
-    y >>= 1
-  }
+  for (; y >= DEFAULT_MIN_MERGE; y >>= 1) x |= y & 1
   const minRun = x + y
   let minGallop = DEFAULT_MIN_GALLOPING
   const tmp: T[] = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >> 1 : DEFAULT_TMP_STORAGE_LENGTH)
@@ -114,11 +108,7 @@ export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabetica
   do {
     runLength = makeAscendingRun(array, lo, hi, compare)
     if (runLength < minRun) {
-      let force = remaining
-      if (force > minRun) {
-        force = minRun
-      }
-
+      let force = remaining > minRun ? minRun : remaining
       binaryInsertionSort(array, lo, lo + force, lo + runLength, compare)
       runLength = force
     }
@@ -176,8 +166,7 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
      */
     while (left < right) {
       // tmp acts as the mid point
-      tmp = (left + right) >> 1
-      if (compare(pivot as T, array[tmp] as T) < 0) right = tmp
+      if (compare(pivot as T, array[(tmp = (left + right) >> 1)] as T) < 0) right = tmp
       else left = tmp + 1
     }
 
@@ -266,8 +255,7 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
    */
   lastOffset++
   while (lastOffset < offset) {
-    tmp = (lastOffset + offset) >> 1
-    if (compare(value, array[start + tmp] as T) > 0) lastOffset = tmp + 1
+    if (compare(value, array[start + (tmp = (lastOffset + offset) >> 1)] as T) > 0) lastOffset = tmp + 1
     else offset = tmp
   }
   return offset
@@ -330,10 +318,8 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
    * array[start + offset].
    */
   lastOffset++
-
   while (lastOffset < offset) {
-    tmp = (lastOffset + offset) >> 1
-    if (compare(value, array[start + tmp] as T) < 0) offset = tmp
+    if (compare(value, array[start + (tmp = (lastOffset + offset) >> 1)] as T) < 0) offset = tmp
     else lastOffset = tmp + 1
   }
 
@@ -429,7 +415,6 @@ function mergeAt<T>(
    * in run2 are already in place
    */
   length2 = gallopLeft(array[start1 + length1 - 1] as T, array, start2, length2, length2 - 1, compare)
-
   if (length2 === 0) return minGallop
 
   /*
