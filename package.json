@@ -1,6 +1,6 @@
 {
   "name": "timsort2",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "TimSort sorting revived in TypeScript",
   "types": "./index.d.ts",
   "main": "./dist/index.js",
@@ -19,12 +19,14 @@
     "test": "vitest"
   },
   "keywords": [
+    "sort",
+    "compare",
+    "timsort",
+    "algorithm",
     "bit",
     "bit manipulation",
-    "math",
     "performance",
-    "utility",
-    "util"
+    "fast"
   ],
   "author": "Torathion",
   "homepage": "https://github.com/Torathion/timsort2",
