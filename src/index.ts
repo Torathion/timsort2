@@ -33,8 +33,10 @@ type Comparator<T> = (a: T, b: T) => number
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
 export function alphabeticalCompare(a: any, b: any): number {
+  // On equality, return 0
   if (a === b) return 0
-  if (~~a === a && ~~b === b) {
+  // Check, if both numbers are integers (a | 0) turns the value into an integer
+  if ((a | 0) === a && (b | 0) === b) {
     if (a === 0 || b === 0) return a - b
 
     if (a < 0 || b < 0) {
@@ -63,7 +65,6 @@ export function alphabeticalCompare(a: any, b: any): number {
 
   const aStr = `${a}`
   const bStr = `${b}`
-
   if (aStr === bStr) return 0
   return aStr < bStr ? -1 : 1
 }
@@ -79,10 +80,7 @@ export function alphabeticalCompare(a: any, b: any): number {
 export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
   let remaining = hi - lo
   // A range of only one element is already sorted.
-  if (remaining < 2) {
-    return array
-  }
-
+  if (remaining < 2) return array
   // On small arrays binary sort can be used directly
   if (remaining < DEFAULT_MIN_MERGE) {
     binaryInsertionSort(array, lo, hi, lo + makeAscendingRun(array, lo, hi, compare), compare)
