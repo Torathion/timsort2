@@ -5,9 +5,9 @@ export default class ArrayGenerator {
    * @returns An array of random integers.
    */
   public static randomInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(Math.floor(Math.random() * 9007199254740992))
+      arr[i] = (Math.random() * 9007199254740992) | 0
     }
     return arr
   }
@@ -18,9 +18,9 @@ export default class ArrayGenerator {
    * @returns An array of integers in descending order.
    */
   public static descendingInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(n - i)
+      arr[i] = (n - 1)
     }
     return arr
   }
@@ -31,9 +31,9 @@ export default class ArrayGenerator {
    * @returns An array of integers in ascending order.
    */
   public static ascendingInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(i)
+      arr[i] = i
     }
     return arr
   }
@@ -44,14 +44,14 @@ export default class ArrayGenerator {
    * @returns An array of integers with 3 random exchanges.
    */
   public static ascending3RandomExchangesInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(i)
+      arr[i] = i
     }
     for (let i = 0; i < 1; i++) {
-      const first: number = Math.floor(Math.random() * n)
-      const second: number = Math.floor(Math.random() * n)
-      const tmp: number = arr[first]
+      const first = (Math.random() * n) | 0
+      const second = (Math.random() * n) | 0
+      const tmp = arr[first]
       arr[first] = arr[second]
       arr[second] = tmp
     }
@@ -64,13 +64,13 @@ export default class ArrayGenerator {
    * @returns An array of integers with the last 10 elements randomized.
    */
   public static ascending10RandomEndInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(i)
+      arr[i] = i
     }
     const endStart: number = Math.max(0, n - 10)
     for (let i = endStart; i < n; i++) {
-      arr[i] = Math.floor(Math.random() * n)
+      arr[i] = (Math.random() * n) | 0
     }
     return arr
   }
@@ -81,9 +81,9 @@ export default class ArrayGenerator {
    * @returns An array of equal integers (all 42).
    */
   public static allEqualInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(42)
+      arr[i] = 42
     }
     return arr
   }
@@ -94,9 +94,9 @@ export default class ArrayGenerator {
    * @returns An array of integers with many duplicates.
    */
   public static manyDuplicateInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(Math.floor(Math.random() * ((n / 2) * (Math.log(n) / Math.LN10))))
+      arr[i] = (Math.random() * ((n / 2) * (Math.log(n) / Math.LN10))) | 0
     }
     return arr
   }
@@ -107,9 +107,9 @@ export default class ArrayGenerator {
    * @returns An array of integers with some duplicates.
    */
   public static someDuplicateInt(n: number): number[] {
-    const arr: number[] = []
+    const arr: number[] = new Array(n)
     for (let i = 0; i < n; i++) {
-      arr.push(Math.floor(Math.random() * n))
+      arr[i] = (Math.random() * n) | 0
     }
     return arr
   }

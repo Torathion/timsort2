@@ -33,11 +33,10 @@ type Comparator<T> = (a: T, b: T) => number
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
 export function alphabeticalCompare(a: any, b: any): number {
-  if (a === b) {
-    return 0
-  }
-
-  if (~~a === a && ~~b === b) {
+  // On equality, return 0
+  if (a === b) return 0
+  // Check, if both numbers are integers (a | 0) turns the value into an integer
+  if ((a | 0) === a && (b | 0) === b) {
     if (a === 0 || b === 0) return a - b
 
     if (a < 0 || b < 0) {
@@ -66,7 +65,6 @@ export function alphabeticalCompare(a: any, b: any): number {
 
   const aStr = `${a}`
   const bStr = `${b}`
-
   if (aStr === bStr) return 0
   return aStr < bStr ? -1 : 1
 }
@@ -81,34 +79,26 @@ export function alphabeticalCompare(a: any, b: any): number {
  */
 export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
   let remaining = hi - lo
-
-  // The array is already sorted
-  if (remaining < 2) {
+  // A range of only one element is already sorted.
+  if (remaining < 2) return array
+  // On small arrays binary sort can be used directly
+  if (remaining < DEFAULT_MIN_MERGE) {
+    binaryInsertionSort(array, lo, hi, lo + makeAscendingRun(array, lo, hi, compare), compare)
     return array
   }
 
   let runLength: number
-  // On small arrays binary sort can be used directly
-  if (remaining < DEFAULT_MIN_MERGE) {
-    runLength = makeAscendingRun(array, lo, hi, compare)
-    binaryInsertionSort(array, lo, hi, lo + runLength, compare)
-    return array
-  }
-
   const len = array.length
 
   let stackSize = 0
   const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
-  const runStart = new Array(stackLength)
-  const runLenArr = new Array(stackLength)
+  const runStart = new Uint32Array(stackLength)
+  const runLenArr = new Uint32Array(stackLength)
 
   // Calculate the minimum run length for the sort
   let x = 0
   let y = remaining
-  while (y >= DEFAULT_MIN_MERGE) {
-    x |= y & 1
-    y >>= 1
-  }
+  for (; y >= DEFAULT_MIN_MERGE; y >>= 1) x |= y & 1
   const minRun = x + y
   let minGallop = DEFAULT_MIN_GALLOPING
   const tmp: T[] = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >> 1 : DEFAULT_TMP_STORAGE_LENGTH)
@@ -116,11 +106,7 @@ export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabetica
   do {
     runLength = makeAscendingRun(array, lo, hi, compare)
     if (runLength < minRun) {
-      let force = remaining
-      if (force > minRun) {
-        force = minRun
-      }
-
+      let force = remaining > minRun ? minRun : remaining
       binaryInsertionSort(array, lo, lo + force, lo + runLength, compare)
       runLength = force
     }
@@ -178,8 +164,7 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
      */
     while (left < right) {
       // tmp acts as the mid point
-      tmp = (left + right) >> 1
-      if (compare(pivot as T, array[tmp] as T) < 0) right = tmp
+      if (compare(pivot as T, array[(tmp = (left + right) >> 1)] as T) < 0) right = tmp
       else left = tmp + 1
     }
 
@@ -268,8 +253,7 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
    */
   lastOffset++
   while (lastOffset < offset) {
-    tmp = (lastOffset + offset) >> 1
-    if (compare(value, array[start + tmp] as T) > 0) lastOffset = tmp + 1
+    if (compare(value, array[start + (tmp = (lastOffset + offset) >> 1)] as T) > 0) lastOffset = tmp + 1
     else offset = tmp
   }
   return offset
@@ -332,10 +316,8 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
    * array[start + offset].
    */
   lastOffset++
-
   while (lastOffset < offset) {
-    tmp = (lastOffset + offset) >> 1
-    if (compare(value, array[start + tmp] as T) < 0) offset = tmp
+    if (compare(value, array[start + (tmp = (lastOffset + offset) >> 1)] as T) < 0) offset = tmp
     else lastOffset = tmp + 1
   }
 
@@ -400,8 +382,8 @@ function mergeAt<T>(
   tmp: T[],
   i: number,
   stackSize: number,
-  runLength: number[],
-  runStart: number[],
+  runLength: Uint32Array,
+  runStart: Uint32Array,
   minGallop: number
 ): number {
   let start1 = runStart[i]
@@ -431,7 +413,6 @@ function mergeAt<T>(
    * in run2 are already in place
    */
   length2 = gallopLeft(array[start1 + length1 - 1] as T, array, start2, length2, length2 - 1, compare)
-
   if (length2 === 0) return minGallop
 
   /*

@@ -13,9 +13,9 @@
 </p>
 </p>
 
-This is a fork of [timsort](https://www.npmjs.com/package/timsort) that has been last updated 9 years ago (24th July 2016). During this time, JavaScript developed tremendously, offering new ways to be faster and write less code, while also setting up new requirements for modern JS development. Timsort2 tries to add all of those new things into this package again, because timsort is [STILL FASTER](#benchmarks) than `array.sort`, even though `array.sort` got some performance improvements.
+This is a fork of [timsort](https://www.npmjs.com/package/timsort), a package that has been last updated 9 years ago (24th July 2016). During this time, JavaScript developed tremendously, offering new ways to be faster and write less code, while its ecosystem has set up new requirements for modern JS development. `timsort2` tries to add all of those new things into this package, because `timsort` is [STILL FASTER](#benchmarks) than `array.sort`, even though `array.sort` got some performance improvements.
 
-Additionally, TimSort2 optimized the original code and now comes with:
+Additionally, `timsort` optimized the original code and now comes with:
 
 - 33% reduced bundle size (5.2KB -> 3.9KB)
 - 5% - 50% faster sorting
@@ -23,6 +23,7 @@ Additionally, TimSort2 optimized the original code and now comes with:
 - ESM and CJS build
 - TypeScript support
 - Better `array.sort` compatibility for easier migration
+- Typed array support
 
 Some words from the previous version:
 
@@ -59,9 +60,20 @@ arr = sort(arr, numberCompare)
 
 ## Performance
 
-A benchmark is provided in `benchmark/index.ts`. It compares the `timsort` module against
-the default `array.sort` method and the old `timsort` package in the numerical sorting of different types of integer array
-(as described [here](http://svn.python.org/projects/python/trunk/Objects/listsort.txt)):
+`TimSort.sort` **is faster** than `array.sort` on almost all of the tested array types. In general, the more ordered the array is the better `TimSort.sort` performs with respect to `array.sort` (up to 8 times faster on already sorted arrays). And also, in general, the bigger the array the more we benefit from using the `timsort` module.
+
+Additionally, `timsort2` is around 5% to 50% faster, but due to the primitive nature of the benchmarks, it seems like the package is slower. This is due to GC calls and premature optimizations from NodeJS that block the tests, receiving varying results. I can assure you that the algorithm is still identical and `timsort2` only adds micro optimizations to reduce the number of function calls, variables and object creations for less GC work.
+
+These data strongly depend on the Node.js version and the machine on which the benchmark is run. I strongly encourage you to run the benchmark on your own setup with:
+
+```powershell
+npm run build
+npm run bench
+```
+
+### Benchmarks
+
+A benchmark is provided in `benchmark/index.ts`. It compares the `timsort` module against the default `array.sort` method and the old `timsort` package in the numerical sorting of different types of integer array (as described [here](http://svn.python.org/projects/python/trunk/Objects/listsort.txt)):
 
 - *Random array*
 - *Descending array*
@@ -75,27 +87,6 @@ the default `array.sort` method and the old `timsort` package in the numerical s
 For any of the array types the sorting is repeated several times and for
 different array sizes, average execution time is then printed.
 I run the benchmark on Node v22.13.0, obtaining the following values:
-
-`TimSort.sort` **is faster** than `array.sort` on almost of the tested array types.
-In general, the more ordered the array is the better `TimSort.sort` performs with respect to `array.sort` (up to 8 times faster on already sorted arrays).
-And also, in general, the bigger the array the more we benefit from using
-the `timsort` module.
-
-Additionally, `timsort2` is around 5% to 50% faster. Due to the primitive nature of the benchmarks, it seems like the package is slower. This is due to GC calls and premature optimizations from NodeJS that block the tests, receiving varying results. I can assure you that the algorithm is still identical and `timsort2` only adds micro optimizations to reduce the number of function calls, variables and object creations for less GC work.
-
-These data strongly depend on Node.js version and the machine on which the benchmark is run. I strongly encourage you to run the benchmark on your own setup with:
-
-```powershell
-npm run bench
-```
-
-If you want to adjust the benchmarks, rebuild them with:
-
-```powershell
-npm run build
-```
-
-### Benchmarks
 
 ```powershell
 ┌──────────────────────────────┬────────────────────┬──────────┬───────────────┬────────────────────┬─────────────────┬─────────────┐

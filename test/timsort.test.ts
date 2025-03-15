@@ -12,7 +12,7 @@ function numberCompare(a, b) {
 }
 
 describe('Sort a Random Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.randomInt(length)
@@ -24,11 +24,11 @@ describe('Sort a Random Array', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Sort a Descending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.descendingInt(length)
@@ -40,11 +40,11 @@ describe('Sort a Descending Array', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Sort an Ascending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.ascendingInt(length)
@@ -56,11 +56,11 @@ describe('Sort an Ascending Array', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Sort an Ascending Array with 3 Random Exchanges', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.ascending3RandomExchangesInt(length)
@@ -72,7 +72,7 @@ describe('Sort an Ascending Array with 3 Random Exchanges', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Sort an Ascending Array with 10 Random Elements at Last', function () {
@@ -104,7 +104,7 @@ describe('Sort an Array of all Equal Elements', function () {
 })
 
 describe('Sort an Array with Many Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.manyDuplicateInt(length)
@@ -116,11 +116,11 @@ describe('Sort an Array with Many Duplicates', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Sort an Array with Some Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.someDuplicateInt(length)
@@ -132,11 +132,11 @@ describe('Sort an Array with Some Duplicates', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of a Random Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -154,11 +154,11 @@ describe('Sort sub range of a Random Array', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of a Descending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -176,11 +176,11 @@ describe('Sort sub range of a Descending Array', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of an Ascending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -198,11 +198,11 @@ describe('Sort sub range of an Ascending Array', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of an Ascending Array with 3 Random Exchanges', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -220,11 +220,11 @@ describe('Sort sub range of an Ascending Array with 3 Random Exchanges', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of an Ascending Array with 10 Random Elements at Last', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -242,11 +242,11 @@ describe('Sort sub range of an Ascending Array with 10 Random Elements at Last',
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of an Array of all Equal Elements', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -264,11 +264,11 @@ describe('Sort sub range of an Array of all Equal Elements', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of an Array with Many Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -286,11 +286,11 @@ describe('Sort sub range of an Array with Many Duplicates', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Sort sub range of an Array with Some Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -308,11 +308,11 @@ describe('Sort sub range of an Array with Some Duplicates', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort a Random Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.randomInt(length)
@@ -324,11 +324,11 @@ describe('Lexicographically Sort a Random Array', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort a Descending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.descendingInt(length)
@@ -340,11 +340,11 @@ describe('Lexicographically Sort a Descending Array', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort an Ascending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.ascendingInt(length)
@@ -356,11 +356,11 @@ describe('Lexicographically Sort an Ascending Array', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort an Ascending Array with 3 Random Exchanges', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.ascending3RandomExchangesInt(length)
@@ -372,11 +372,11 @@ describe('Lexicographically Sort an Ascending Array with 3 Random Exchanges', ()
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort an Ascending Array with 10 Random Elements at Last', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.ascending10RandomEndInt(length)
@@ -388,11 +388,11 @@ describe('Lexicographically Sort an Ascending Array with 10 Random Elements at L
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort an Array of all Equal Elements', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.allEqualInt(length)
@@ -404,11 +404,11 @@ describe('Lexicographically Sort an Array of all Equal Elements', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort an Array with Many Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.manyDuplicateInt(length)
@@ -420,11 +420,11 @@ describe('Lexicographically Sort an Array with Many Duplicates', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort an Array with Some Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const arr1 = ArrayGenerator.someDuplicateInt(length)
@@ -436,11 +436,11 @@ describe('Lexicographically Sort an Array with Some Duplicates', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of a Random Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -458,11 +458,11 @@ describe('Lexicographically Sort sub range of a Random Array', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of a Descending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -480,11 +480,11 @@ describe('Lexicographically Sort sub range of a Descending Array', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of an Ascending Array', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -502,11 +502,11 @@ describe('Lexicographically Sort sub range of an Ascending Array', () => {
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of an Ascending Array with 3 Random Exchanges', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -524,11 +524,11 @@ describe('Lexicographically Sort sub range of an Ascending Array with 3 Random E
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of an Ascending Array with 10 Random Elements at Last', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -546,11 +546,11 @@ describe('Lexicographically Sort sub range of an Ascending Array with 10 Random 
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of an Array of all Equal Elements', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -568,11 +568,11 @@ describe('Lexicographically Sort sub range of an Array of all Equal Elements', (
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of an Array with Many Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -590,11 +590,11 @@ describe('Lexicographically Sort sub range of an Array with Many Duplicates', ()
         }
       }
     })
-  })
+  }
 })
 
 describe('Lexicographically Sort sub range of an Array with Some Duplicates', () => {
-  lengths.forEach(length => {
+  for (const length of lengths) {
     it(`Should sort a size ${length} array`, () => {
       for (let i = 0; i < repetitions; i++) {
         const lo = (length * 0.25) | 0
@@ -612,7 +612,7 @@ describe('Lexicographically Sort sub range of an Array with Some Duplicates', ()
         }
       }
     })
-  })
+  }
 })
 
 // https://github.com/mziccard/node-timsort/pull/19
@@ -687,7 +687,7 @@ describe('Sort random arrays with lengths near power of two', () => {
     lengths.push(i + 1)
   }
 
-  lengths.forEach(length => {
+  for (const length of lengths) {
     const iterations = Math.max(1, Math.round(100000 / (length + 1)))
     it(`should sort a size ${length} array ${iterations} times`, () => {
       for (let i = 0; i < iterations; i++) {
@@ -700,5 +700,5 @@ describe('Sort random arrays with lengths near power of two', () => {
         expect(arr1).toEqual(arr2)
       }
     })
-  })
+  }
 })

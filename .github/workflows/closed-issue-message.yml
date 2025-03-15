@@ -4,6 +4,12 @@ on:
         types: [closed]
 jobs:
     auto_comment:
+        permissions:
+            # Required to checkout the code
+            contents: read
+            # Required to put a comment into the pull-request
+            pull-requests: write
+
         runs-on: ubuntu-latest
         steps:
             - uses: aws-actions/closed-issue-message@v2

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.0.4] 03-15-2025
+
+- Use `Uint32Array` instead of number arrays to keep track of merge run statistics
+- Inline more values for better performance
+- Optimize `alphabeticalCompare`
+
 ## [1.0.3] 03-15-2025
 
 - Move typestar to dependencies [#2](https://github.com/Torathion/timsort2/pull/2) by @SukkaW
