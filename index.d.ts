@@ -1,6 +1,6 @@
 import { AnyArray } from 'typestar'
 
-declare namespace timsort2 {
+declare module 'timsort2' {
   /**
    *  Type representing a comparator function used for sorting an array.
    */
