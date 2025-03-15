@@ -87,7 +87,7 @@ export default function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alp
     return array
   }
 
-  let runLength = 0
+  let runLength: number
   // On small arrays binary sort can be used directly
   if (remaining < DEFAULT_MIN_MERGE) {
     runLength = makeAscendingRun(array, lo, hi, compare)
@@ -227,7 +227,7 @@ function binaryInsertionSort<T>(array: AnyArray<T>, lo: number, hi: number, star
 function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
   const startHint = start + hint
   let lastOffset = 0
-  let maxOffset = 0
+  let maxOffset: number
   let offset = 1
   let tmp
 
@@ -291,7 +291,7 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
 function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: number, hint: number, compare: Comparator<T>): number {
   const startHint = start + hint
   let lastOffset = 0
-  let maxOffset = 0
+  let maxOffset: number
   let offset = 1
   let tmp
 
@@ -481,8 +481,8 @@ function mergeHigh<T>(
   let cursor1 = start1 + length1 - 1
   let cursor2 = length2 - 1
   let dest = start2 + length2 - 1
-  let customCursor = 0
-  let customDest = 0
+  let customCursor: number
+  let customDest: number
 
   array[dest--] = array[cursor1--]
 
