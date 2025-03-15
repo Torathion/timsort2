@@ -81,26 +81,24 @@ export function alphabeticalCompare(a: any, b: any): number {
  */
 export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabeticalCompare, lo = 0, hi = array.length): AnyArray<T> {
   let remaining = hi - lo
-
-  // The array is already sorted
+  // A range of only one element is already sorted.
   if (remaining < 2) {
     return array
   }
 
-  let runLength: number
   // On small arrays binary sort can be used directly
   if (remaining < DEFAULT_MIN_MERGE) {
-    runLength = makeAscendingRun(array, lo, hi, compare)
-    binaryInsertionSort(array, lo, hi, lo + runLength, compare)
+    binaryInsertionSort(array, lo, hi, lo + makeAscendingRun(array, lo, hi, compare), compare)
     return array
   }
 
+  let runLength: number
   const len = array.length
 
   let stackSize = 0
   const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
-  const runStart = new Array(stackLength)
-  const runLenArr = new Array(stackLength)
+  const runStart = new Uint32Array(stackLength)
+  const runLenArr = new Uint32Array(stackLength)
 
   // Calculate the minimum run length for the sort
   let x = 0
@@ -400,8 +398,8 @@ function mergeAt<T>(
   tmp: T[],
   i: number,
   stackSize: number,
-  runLength: number[],
-  runStart: number[],
+  runLength: Uint32Array,
+  runStart: Uint32Array,
   minGallop: number
 ): number {
   let start1 = runStart[i]
