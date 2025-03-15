@@ -614,3 +614,93 @@ describe('Lexicographically Sort sub range of an Array with Some Duplicates', ()
     })
   })
 })
+
+// https://github.com/mziccard/node-timsort/pull/19
+describe('Sort problematic arrays', () => {
+  it('should sort array with some duplicates', () => {
+    // https://github.com/brython-dev/brython/pull/828/files
+    const input = [
+      1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.5, 0.5, 1.0,
+      0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 1.0, 0.5,
+      0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 0.5, 0.5, 0.5,
+      0.6, 1.0
+    ];
+    const expected = input.slice().sort(numberCompare);
+    const output = input.slice();
+    sort(output, numberCompare);
+    expect(output).toEqual(expected);
+  });
+
+  it('should sort array with some duplicates and custom comparator', () => {
+    // https://gist.github.com/stropitek/a171cafda73379e7ea5be86c8a4e741a
+    const input = [
+      1487868586378,
+      1487857485296,
+      '2016-06-10T11:15:13.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:32.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:31.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:27.000Z',
+      '2008-05-16T11:57:13.000Z',
+      '2008-05-16T11:57:13.000Z',
+      '2008-05-16T11:57:13.000Z',
+      '2008-05-16T11:57:12.000Z',
+      '2008-05-16T11:57:12.000Z',
+      1485944753582,
+      1485871296146,
+      1485871143711,
+      1484125236275,
+      1484069406406,
+      '2008-05-16T11:57:41.000Z'
+    ];
+
+    const comparator = (a, b) => {
+      if (a < b) return -1;
+      if (a > b) return 1;
+      return 0;
+    };
+
+    const expected = input.slice().sort(comparator);
+    const output = input.slice();
+    sort(output, comparator);
+    expect(output).toEqual(expected);
+  });
+});
+
+describe('Sort random arrays with lengths near power of two', () => {
+  const lengths: number[] = [];
+  for (let i = 1; i <= 1048576; i *= 2) {
+    lengths.push(i - 1);
+    lengths.push(i);
+    lengths.push(i + 1);
+  }
+
+  lengths.forEach((length) => {
+    const iterations = Math.max(1, Math.round(100000 / (length + 1)));
+    it(`should sort a size ${length} array ${iterations} times`, () => {
+      for (let i = 0; i < iterations; i++) {
+        const arr1 = ArrayGenerator.randomInt(length);
+        const arr2 = arr1.slice();
+
+        sort(arr1, numberCompare);
+        arr2.sort(numberCompare);
+
+        expect(arr1).toEqual(arr2);
+      }
+    });
+  });
+});

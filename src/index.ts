@@ -610,9 +610,8 @@ function mergeHigh<T>(
     }
 
     array[dest] = tmp[cursor2]
-  } else if (length2 === 0) {
-    throw new Error('mergeHigh preconditions were not respected')
-  } else {
+  } else if (length2 === 0) return minGallop
+  else {
     customCursor = dest - (length2 - 1)
     for (i = 0; i < length2; i++) {
       array[customCursor + i] = tmp[i]
@@ -765,9 +764,8 @@ function mergeLow<T>(
       array[dest + i] = array[cursor2 + i]
     }
     array[dest + length2] = tmp[cursor1]
-  } else if (length1 === 0) {
-    throw new Error('mergeLow preconditions were not respected')
-  } else {
+  } else if (length1 === 0) return minGallop
+  else {
     for (i = 0; i < length1; i++) {
       array[dest + i] = tmp[cursor1 + i]
     }
