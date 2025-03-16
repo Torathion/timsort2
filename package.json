@@ -1,6 +1,6 @@
 {
   "name": "timsort2",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "TimSort sorting revived in TypeScript",
   "types": "./index.d.ts",
   "main": "./dist/index.js",
@@ -23,8 +23,6 @@
     "compare",
     "timsort",
     "algorithm",
-    "bit",
-    "bit manipulation",
     "performance",
     "fast"
   ],

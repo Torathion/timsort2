@@ -1,20 +1,9 @@
 import type { AnyArray } from 'typestar'
 
 /**
- * Default minimum size of a run.
- */
-const DEFAULT_MIN_MERGE = 32
-
-/**
  * Minimum ordered subsequece required to do galloping.
  */
 const DEFAULT_MIN_GALLOPING = 7
-
-/**
- * Default tmp storage length. Can increase depending on the size of the
- * smallest run to merge.
- */
-const DEFAULT_TMP_STORAGE_LENGTH = 256
 
 /**
  * Pre-computed powers of 10 for efficient lexicographic comparison of
@@ -82,40 +71,41 @@ export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabetica
   // A range of only one element is already sorted.
   if (remaining < 2) return array
   // On small arrays binary sort can be used directly
-  if (remaining < DEFAULT_MIN_MERGE) {
+  if (remaining < 32) {
     binaryInsertionSort(array, lo, hi, lo + makeAscendingRun(array, lo, hi, compare), compare)
     return array
   }
 
-  let runLength: number
-  const len = array.length
-
+  let runLength = array.length
   let stackSize = 0
-  const stackLength = len < 120 ? 5 : len < 1542 ? 10 : len < 119151 ? 19 : 40
-  const runStart = new Uint32Array(stackLength)
-  const runLenArr = new Uint32Array(stackLength)
+  runLength = runLength < 120 ? 5 : runLength < 1542 ? 10 : runLength < 119151 ? 19 : 40
+  const runStart = new Uint32Array(runLength)
+  const runLenArr = new Uint32Array(runLength)
 
   // Calculate the minimum run length for the sort
-  let x = 0
+  let n = 0
   let y = remaining
-  for (; y >= DEFAULT_MIN_MERGE; y >>= 1) x |= y & 1
-  const minRun = x + y
+  while (y >= 32) {
+    n |= y & 1
+    y >>= 1
+  }
+  const minRun = n + y
   let minGallop = DEFAULT_MIN_GALLOPING
-  const tmp: T[] = new Array(len < 2 * DEFAULT_TMP_STORAGE_LENGTH ? len >> 1 : DEFAULT_TMP_STORAGE_LENGTH)
+  const tmp: T[] = new Array(runLength < 512 ? runLength >> 1 : 256)
   // Do runs
   do {
     runLength = makeAscendingRun(array, lo, hi, compare)
     if (runLength < minRun) {
-      let force = remaining > minRun ? minRun : remaining
-      binaryInsertionSort(array, lo, lo + force, lo + runLength, compare)
-      runLength = force
+      n = remaining > minRun ? minRun : remaining
+      binaryInsertionSort(array, lo, lo + n, lo + runLength, compare)
+      runLength = n
     }
     // Push new run and merge if necessary
     runStart[stackSize] = lo
     runLenArr[stackSize] = runLength
     stackSize += 1
     while (stackSize > 1) {
-      let n = stackSize - 2
+      n = stackSize - 2
 
       if ((n >= 1 && runLenArr[n - 1] <= runLenArr[n] + runLenArr[n + 1]) || (n >= 2 && runLenArr[n - 2] <= runLenArr[n] + runLenArr[n - 1])) {
         if (runLenArr[n - 1] < runLenArr[n + 1]) n--
@@ -131,7 +121,7 @@ export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabetica
 
   // Force merging of remaining runs
   while (stackSize > 1) {
-    let n = stackSize - 2
+    n = stackSize - 2
     if (n > 0 && runLenArr[n - 1] < runLenArr[n + 1]) n--
     minGallop = mergeAt(array, compare, tmp, n, stackSize--, runLenArr, runStart, minGallop)
   }
@@ -612,9 +602,9 @@ function mergeHigh<T>(
  * @param array - target array
  * @param compare - comparator to compare the underlying values with.
  * @param tmp - temporary stored values of the target array
- * @param start1 - First element in run1.
+ * @param dest - First element in run1 that is used as the target insertion index pointer.
  * @param length1 - Length of run1.
- * @param start2 - First element in run2.
+ * @param cursor2 - First element in run2 that is used as merge cursor from run2.
  * @param length2 - Length of run2.
  * @param minGallop - minimum length of the merge and compare run
  * @returns the updated `minGallop value`
@@ -623,21 +613,18 @@ function mergeLow<T>(
   array: AnyArray<T>,
   compare: Comparator<T>,
   tmp: T[],
-  start1: number,
+  dest: number,
   length1: number,
-  start2: number,
+  cursor2: number,
   length2: number,
   minGallop: number
 ): number {
   let i = 0
+  let cursor1 = 0
 
   for (; i < length1; i++) {
-    tmp[i] = array[start1 + i] as T
+    tmp[i] = array[dest + i] as T
   }
-
-  let cursor1 = 0
-  let cursor2 = start2
-  let dest = start1
 
   array[dest++] = array[cursor2++]
 
