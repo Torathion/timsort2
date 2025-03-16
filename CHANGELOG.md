@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.0.5] 03-16-2025
+
+- Reduce number of used variables
+
 ## [1.0.4] 03-15-2025
 
 - Use `Uint32Array` instead of number arrays to keep track of merge run statistics
