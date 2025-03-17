@@ -22,5 +22,16 @@ declare module 'timsort2' {
    * @param lo - First element in the range (inclusive).
    * @param hi - Last element in the range.
    */
-  export function sort<T>(array: AnyArray<T>, compare?: Comparator<T>, lo?: number, hi?: number): AnyArray<T>
+  export function sort<T>(array: T[], compare?: Comparator<T>, lo?: number, hi?: number): T[]
+  export function sort<T extends ArrayBufferLike>(array: Int8Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Int8Array<T>
+  export function sort<T extends ArrayBufferLike>(array: Int32Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Int32Array
+  export function sort<T extends ArrayBufferLike>(array: Uint8Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Uint8Array<T>
+  export function sort<T extends ArrayBufferLike>(array: Uint16Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Uint16Array<T>
+  export function sort<T extends ArrayBufferLike>(array: Uint32Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Uint32Array<T>
+  export function sort<T extends ArrayBufferLike>(array: Float32Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Float32Array<T>
+  export function sort<T extends ArrayBufferLike>(array: Float64Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): Float64Array<T>
+  export function sort<T extends ArrayBufferLike>(array: Uint8ClampedArray<T>, compare?: Comparator<T>, lo?: number, hi?: number): Uint8ClampedArray<T>
+  export function sort<T extends ArrayBufferLike>(array: Uint8ClampedArray<T>, compare?: Comparator<T>, lo?: number, hi?: number): Uint8ClampedArray<T>
+  export function sort<T extends ArrayBufferLike>(array: BigInt64Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): BigInt64Array<T>
+  export function sort<T extends ArrayBufferLike>(array: BigUint64Array<T>, compare?: Comparator<T>, lo?: number, hi?: number): BigUint64Array<T>
 }
