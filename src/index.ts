@@ -1,5 +1,8 @@
 import type { AnyArray } from 'typestar'
 
+const GStartBuffer = new ArrayBuffer(160)
+const GRunBuffer = new ArrayBuffer(160)
+
 /**
  * Minimum ordered subsequece required to do galloping.
  */
@@ -79,8 +82,8 @@ export function sort<T>(array: AnyArray<T>, compare: Comparator<T> = alphabetica
   let runLength = array.length
   let stackSize = 0
   runLength = runLength < 120 ? 5 : runLength < 1542 ? 10 : runLength < 119151 ? 19 : 40
-  const runStart = new Uint32Array(runLength)
-  const runLenArr = new Uint32Array(runLength)
+  const runStart = new Uint32Array(GStartBuffer, 0, runLength)
+  const runLenArr = new Uint32Array(GRunBuffer, 0, runLength)
 
   // Calculate the minimum run length for the sort
   let n = 0
