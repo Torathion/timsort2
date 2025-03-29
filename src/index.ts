@@ -216,12 +216,9 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
       lastOffset = offset
       offset = (offset << 1) + 1
     }
-
-    if (offset > maxOffset) offset = maxOffset
-
     // Make offsets relative to start
     lastOffset += hint
-    offset += hint
+    offset = hint + (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
 
     // value <= array[start + hint]
   } else {
@@ -230,11 +227,10 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
       lastOffset = offset
       offset = (offset << 1) + 1
     }
-    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     tmp = lastOffset
-    lastOffset = hint - offset
+    lastOffset = hint - (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
     offset = hint - tmp
   }
 
@@ -280,11 +276,9 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
       offset = (offset << 1) + 1
     }
 
-    if (offset > maxOffset) offset = maxOffset
-
     // Make offsets relative to start
     tmp = lastOffset
-    lastOffset = hint - offset
+    lastOffset = hint - (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
     offset = hint - tmp
 
     // value >= array[start + hint]
@@ -295,11 +289,10 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
       lastOffset = offset
       offset = (offset << 1) + 1
     }
-    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     lastOffset += hint
-    offset += hint
+    offset = hint + (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
   }
 
   /*
