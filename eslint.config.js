@@ -4,7 +4,8 @@ export default [
     ...await shiny({ configs: ['base', 'format', 'vitest'] }),
     {
         rules: {
-            'unicorn/no-nested-ternary': 0
+            'unicorn/no-nested-ternary': 0,
+            'no-redeclare': 0
         }
     }
 ]

@@ -1,7 +1,7 @@
 # timsort2: node-timsort reloaded
 
 <p align="center">
-<h1 align="center">Sort up to 5 times faster! Now smaller and even faster!</h1>
+<h1 align="center">The fastest sub-range sorting algorithm!</h1>
 <p align="center">
   <a href="https://www.npmjs.com/package/timsort2"><img src="https://img.shields.io/npm/v/timsort2?style=for-the-badge&logo=npm"/></a>
   <a href="https://npmtrends.com/timsort2"><img src="https://img.shields.io/npm/dm/timsort2?style=for-the-badge"/></a>
@@ -13,12 +13,12 @@
 </p>
 </p>
 
-This is a fork of [timsort](https://www.npmjs.com/package/timsort), a package that has been last updated 9 years ago (24th July 2016). During this time, JavaScript developed tremendously, offering new ways to be faster and write less code, while its ecosystem has set up new requirements for modern JS development. `timsort2` tries to add all of those new things into this package, because `timsort` is [STILL FASTER](#benchmarks) than `array.sort`, even though `array.sort` got some performance improvements.
+This is a fork of [timsort](https://www.npmjs.com/package/timsort), a package that has been last updated 9 years ago (24th July 2016). During this time, JavaScript developed tremendously, offering new ways to be faster and write less code, while its ecosystem has set up new requirements for modern JS development. `timsort2` tries to add all of those new things into this package, because `timsort` still acts as an extremely fast sub-range sorting algorithm.
 
 Additionally, `timsort` optimized the original code and now comes with:
 
 - 33% reduced bundle size (5.2KB -> 3.9KB)
-- 5% - 50% faster sorting
+- 10% - 60% faster sorting
 - Less overhead (less function calls / object creations / variables)
 - ESM and CJS build
 - TypeScript support
@@ -60,9 +60,9 @@ arr = sort(arr, numberCompare)
 
 ## Performance
 
-`TimSort.sort` **is faster** than `array.sort` on almost all of the tested array types. In general, the more ordered the array is the better `TimSort.sort` performs with respect to `array.sort` (up to 8 times faster on already sorted arrays). And also, in general, the bigger the array the more we benefit from using the `timsort` module.
+The sorting algorithm of `timsort2` is on par with the native `array.sort`, but sometimes up to 5% faster than it! It's main strength is sorting only particular parts of an array, by giving a start and end index, performing an [in-place](https://en.wikipedia.org/wiki/In-place_algorithm) sort. This drastically saves a lot of memory and performance for algorithms that need to sort only parts of an array.
 
-Additionally, `timsort2` is around 5% to 50% faster, but due to the primitive nature of the benchmarks, it seems like the package is slower. This is due to GC calls and premature optimizations from NodeJS that block the tests, receiving varying results. I can assure you that the algorithm is still identical and `timsort2` only adds micro optimizations to reduce the number of function calls, variables and object creations for less GC work.
+Additionally, `timsort2` is around 10% to 60% faster, but due to the primitive nature of the benchmarks, it seems like the package is slower. This is due to GC calls and premature optimizations from NodeJS that block the tests, receiving varying results. I can assure you that the algorithm is still identical and `timsort2` only adds micro optimizations to reduce the number of function calls, variables and object creations for less GC work.
 
 These data strongly depend on the Node.js version and the machine on which the benchmark is run. I strongly encourage you to run the benchmark on your own setup with:
 
@@ -73,7 +73,9 @@ npm run bench
 
 ### Benchmarks
 
-A benchmark is provided in `benchmark/index.ts`. It compares the `timsort` module against the default `array.sort` method and the old `timsort` package in the numerical sorting of different types of integer array (as described [here](http://svn.python.org/projects/python/trunk/Objects/listsort.txt)):
+:warning: These are benchmarks of the old `timsort` package, updated to show the comparison between `timsort` and `timsort2`. They are showing that `timsort2` is almost always 50% faster than native `array.sort`, but this heavily rigged due to GC interrupting the benchmarks. In reality, it's more like -1% to 5% faster than native `array.sort`. See [here](https://github.com/Torathion/timsort2/issues/6) for more information.
+
+The benchmarks are provided in `benchmark/index.ts`. They compare the `timsort2` module against the default `array.sort` method and the old `timsort` package in the numerical sorting of different types of integer array (as described [here](http://svn.python.org/projects/python/trunk/Objects/listsort.txt)):
 
 - *Random array*
 - *Descending array*
@@ -92,77 +94,71 @@ I run the benchmark on Node v22.13.0, obtaining the following values:
 ┌──────────────────────────────┬────────────────────┬──────────┬───────────────┬────────────────────┬─────────────────┬─────────────┐
 │ ArrayType                    │ Length             │ Time de… │ Time old      │ Time new           │ Speedup default │ Speedup old │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ randomInt                    │ 10                 │ 676      │ 320           │ 320                │ 2.11            │ 1.00        │
+│ randomInt                    │ 10                 │ 753      │ 332           │ 327                │ 2.30            │ 1.02        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ randomInt                    │ 100                │ 11209    │ 5712          │ 6019               │ 1.86            │ 0.95        │
+│ randomInt                    │ 100                │ 10758    │ 6222          │ 6508               │ 1.65            │ 0.96        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ randomInt                    │ 1000               │ 165493   │ 91890         │ 91565              │ 1.81            │ 1.00        │
+│ randomInt                    │ 1000               │ 153182   │ 103254        │ 94489              │ 1.62            │ 1.09        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ randomInt                    │ 10000              │ 2293254  │ 1250329       │ 1268879            │ 1.81            │ 0.99        │
+│ randomInt                    │ 10000              │ 1969771  │ 1541405       │ 1258359            │ 1.57            │ 1.22        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ descendingInt                │ 10                 │ 350      │ 317           │ 291                │ 1.20            │ 1.09        │
+│ descendingInt                │ 10                 │ 312      │ 226           │ 228                │ 1.37            │ 0.99        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ descendingInt                │ 100                │ 1537     │ 816           │ 790                │ 1.94            │ 1.03        │
+│ descendingInt                │ 100                │ 1440     │ 631           │ 509                │ 2.83            │ 1.24        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ descendingInt                │ 1000               │ 15535    │ 4024          │ 4522               │ 3.43            │ 0.89        │
+│ descendingInt                │ 1000               │ 12710    │ 3197          │ 2573               │ 4.94            │ 1.24        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ descendingInt                │ 10000              │ 135298   │ 28513         │ 28771              │ 4.70            │ 0.99        │
+│ descendingInt                │ 10000              │ 124059   │ 24616         │ 24055              │ 5.16            │ 1.02        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascendingInt                 │ 10                 │ 328      │ 219           │ 207                │ 1.58            │ 1.06        │
+│ ascendingInt                 │ 10                 │ 312      │ 227           │ 214                │ 1.46            │ 1.06        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascendingInt                 │ 100                │ 1430     │ 425           │ 483                │ 2.96            │ 0.88        │
+│ ascendingInt                 │ 100                │ 1422     │ 591           │ 501                │ 2.84            │ 1.18        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascendingInt                 │ 1000               │ 12546    │ 1938          │ 2375               │ 5.28            │ 0.82        │
+│ ascendingInt                 │ 1000               │ 12486    │ 3117          │ 2512               │ 4.97            │ 1.24        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascendingInt                 │ 10000              │ 124829   │ 26932         │ 17062              │ 7.32            │ 1.58        │
+│ ascendingInt                 │ 10000              │ 123832   │ 23840         │ 23198              │ 5.34            │ 1.03        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending3RandomExchangesInt │ 10                 │ 458      │ 298           │ 274                │ 1.67            │ 1.09        │
+│ ascending3RandomExchangesInt │ 10                 │ 473      │ 295           │ 277                │ 1.70            │ 1.06        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending3RandomExchangesInt │ 100                │ 3060     │ 1039          │ 991                │ 3.09            │ 1.05        │
+│ ascending3RandomExchangesInt │ 100                │ 3139     │ 1181          │ 1109               │ 2.83            │ 1.07        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending3RandomExchangesInt │ 1000               │ 14369    │ 4116          │ 2988               │ 4.81            │ 1.38        │
+│ ascending3RandomExchangesInt │ 1000               │ 14075    │ 3864          │ 4281               │ 3.29            │ 0.90        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending3RandomExchangesInt │ 10000              │ 137179   │ 39406         │ 25568              │ 5.37            │ 1.54        │
+│ ascending3RandomExchangesInt │ 10000              │ 132266   │ 33468         │ 32791              │ 4.03            │ 1.02        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending10RandomEndInt      │ 10                 │ 640      │ 416           │ 403                │ 1.59            │ 1.03        │
+│ ascending10RandomEndInt      │ 10                 │ 637      │ 419           │ 411                │ 1.55            │ 1.02        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending10RandomEndInt      │ 100                │ 2786     │ 1408          │ 1356               │ 2.05            │ 1.04        │
+│ ascending10RandomEndInt      │ 100                │ 2829     │ 1627          │ 1525               │ 1.86            │ 1.07        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending10RandomEndInt      │ 1000               │ 15530    │ 4815          │ 4115               │ 3.77            │ 1.17        │
+│ ascending10RandomEndInt      │ 1000               │ 15562    │ 8514          │ 5481               │ 2.84            │ 1.55        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ ascending10RandomEndInt      │ 10000              │ 134392   │ 26214         │ 26122              │ 5.14            │ 1.00        │
+│ ascending10RandomEndInt      │ 10000              │ 137841   │ 38439         │ 37720              │ 3.65            │ 1.02        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ allEqualInt                  │ 10                 │ 320      │ 214           │ 198                │ 1.62            │ 1.08        │
+│ allEqualInt                  │ 10                 │ 312      │ 225           │ 225                │ 1.39            │ 1.00        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ allEqualInt                  │ 100                │ 1425     │ 427           │ 403                │ 3.54            │ 1.06        │
+│ allEqualInt                  │ 100                │ 1429     │ 586           │ 495                │ 2.88            │ 1.18        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ allEqualInt                  │ 1000               │ 12464    │ 1849          │ 2135               │ 5.84            │ 0.87        │
+│ allEqualInt                  │ 1000               │ 12419    │ 3130          │ 2503               │ 4.96            │ 1.25        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ allEqualInt                  │ 10000              │ 122069   │ 15485         │ 15558              │ 7.85            │ 1.00        │
+│ allEqualInt                  │ 10000              │ 123531   │ 23688         │ 23101              │ 5.35            │ 1.03        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ manyDuplicateInt             │ 10                 │ 607      │ 398           │ 386                │ 1.57            │ 1.03        │
+│ manyDuplicateInt             │ 10                 │ 624      │ 406           │ 395                │ 1.58            │ 1.03        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ manyDuplicateInt             │ 100                │ 9886     │ 6049          │ 5996               │ 1.65            │ 1.01        │
+│ manyDuplicateInt             │ 100                │ 9785     │ 6676          │ 6434               │ 1.52            │ 1.04        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ manyDuplicateInt             │ 1000               │ 142210   │ 91279         │ 91106              │ 1.56            │ 1.00        │
+│ manyDuplicateInt             │ 1000               │ 143777   │ 106532        │ 97154              │ 1.48            │ 1.10        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ manyDuplicateInt             │ 10000              │ 1896399  │ 1267961       │ 1263132            │ 1.50            │ 1.00        │
+│ manyDuplicateInt             │ 10000              │ 1875592  │ 1462142       │ 1294339            │ 1.45            │ 1.13        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ someDuplicateInt             │ 10                 │ 612      │ 413           │ 401                │ 1.52            │ 1.03        │
+│ someDuplicateInt             │ 10                 │ 645      │ 423           │ 414                │ 1.56            │ 1.02        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ someDuplicateInt             │ 100                │ 9901     │ 6069          │ 6010               │ 1.65            │ 1.01        │
+│ someDuplicateInt             │ 100                │ 9773     │ 6671          │ 6414               │ 1.52            │ 1.04        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ someDuplicateInt             │ 1000               │ 142366   │ 91415         │ 91298              │ 1.56            │ 1.00        │
+│ someDuplicateInt             │ 1000               │ 142846   │ 105365        │ 96549              │ 1.48            │ 1.09        │
 ├──────────────────────────────┼────────────────────┼──────────┼───────────────┼────────────────────┼─────────────────┼─────────────┤
-│ someDuplicateInt             │ 10000              │ 1856135  │ 1242881       │ 1242006            │ 1.49            │ 1.00        │
+│ someDuplicateInt             │ 10000              │ 1855327  │ 1459931       │ 1294417            │ 1.43            │ 1.13        │
 └──────────────────────────────┴────────────────────┴──────────┴───────────────┴────────────────────┴─────────────────┴─────────────┘
 ```
-
-Please also notice that:
-
--  This benchmark is far from exhaustive. Several cases are not considered and the results must be taken as partial
--  *inlining* is surely playing an active role in `timsort` module's good performance
--  A more accurate comparison of the algorithms would require implementing `array.sort` in pure javascript and counting element comparisons. `array.sort` in fact calls an underlying C++ function from V8 directly.
 
 ## Stability
 
