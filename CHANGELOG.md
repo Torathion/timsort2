@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.0.6] 03-29-2025
+
+- Rebrand as an extremely fast sub-range sorting algorithm.
+- Reuse buffers to reduce memory overhead
+- Make offset check branchless
+
 ## [1.0.5] 03-16-2025
 
 - Reduce number of used variables

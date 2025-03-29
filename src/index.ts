@@ -1,5 +1,8 @@
 import type { AnyArray } from 'typestar'
 
+const GStartBuffer = new ArrayBuffer(160)
+const GRunBuffer = new ArrayBuffer(160)
+
 /**
  * Minimum ordered subsequece required to do galloping.
  */
@@ -91,8 +94,8 @@ export function sort<T>(array: AnyArray<T>, compare = alphabeticalCompare, lo = 
   let runLength = array.length
   let stackSize = 0
   runLength = runLength < 120 ? 5 : runLength < 1542 ? 10 : runLength < 119151 ? 19 : 40
-  const runStart = new Uint32Array(runLength)
-  const runLenArr = new Uint32Array(runLength)
+  const runStart = new Uint32Array(GStartBuffer, 0, runLength)
+  const runLenArr = new Uint32Array(GRunBuffer, 0, runLength)
 
   // Calculate the minimum run length for the sort
   let n = 0
@@ -225,12 +228,9 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
       lastOffset = offset
       offset = (offset << 1) + 1
     }
-
-    if (offset > maxOffset) offset = maxOffset
-
     // Make offsets relative to start
     lastOffset += hint
-    offset += hint
+    offset = hint + (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
 
     // value <= array[start + hint]
   } else {
@@ -239,11 +239,10 @@ function gallopLeft<T>(value: T, array: AnyArray<T>, start: number, length: numb
       lastOffset = offset
       offset = (offset << 1) + 1
     }
-    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     tmp = lastOffset
-    lastOffset = hint - offset
+    lastOffset = hint - (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
     offset = hint - tmp
   }
 
@@ -289,11 +288,9 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
       offset = (offset << 1) + 1
     }
 
-    if (offset > maxOffset) offset = maxOffset
-
     // Make offsets relative to start
     tmp = lastOffset
-    lastOffset = hint - offset
+    lastOffset = hint - (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
     offset = hint - tmp
 
     // value >= array[start + hint]
@@ -304,11 +301,10 @@ function gallopRight<T>(value: T, array: AnyArray<T>, start: number, length: num
       lastOffset = offset
       offset = (offset << 1) + 1
     }
-    if (offset > maxOffset) offset = maxOffset
 
     // Make offsets relative to start
     lastOffset += hint
-    offset += hint
+    offset = hint + (maxOffset + (((offset - maxOffset) >> 31) & (offset - maxOffset)))
   }
 
   /*

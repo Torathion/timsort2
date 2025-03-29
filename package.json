@@ -1,6 +1,6 @@
 {
   "name": "timsort2",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "TimSort sorting revived in TypeScript",
   "types": "./index.d.ts",
   "main": "./dist/index.js",
@@ -38,19 +38,20 @@
   "sideEffects": false,
   "type": "module",
   "license": "MIT",
+  "packageManager": "pnpm@10.7.0",
   "dependencies": {
     "typestar": "^1.8.0"
   },
   "devDependencies": {
-    "@rollup/rollup-win32-ia32-msvc": "^4.35.0",
-    "@types/node": "^22.13.10",
-    "@vitest/coverage-v8": "^3.0.8",
+    "@rollup/rollup-win32-ia32-msvc": "^4.38.0",
+    "@types/node": "^22.13.14",
+    "@vitest/coverage-v8": "^3.0.9",
     "cli-table3": "^0.6.5",
     "esbuild": "^0.25.1",
-    "eslint": "^9.22.0",
+    "eslint": "^9.23.0",
     "eslint-config-shiny": "^4.1.0",
     "timsort": "^0.3.0",
     "typescript": "^5.8.2",
-    "vitest": "^3.0.8"
+    "vitest": "^3.0.9"
   }
 }
