@@ -38,6 +38,7 @@
   "sideEffects": false,
   "type": "module",
   "license": "MIT",
+  "packageManager": "pnpm@10.7.0",
   "dependencies": {
     "typestar": "^1.8.0"
   },
